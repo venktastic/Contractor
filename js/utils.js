@@ -238,3 +238,25 @@ document.addEventListener('click', (e) => {
         menu.classList.add('hidden');
     }
 });
+
+// Switch User Role (Demo Function)
+function switchRole(role) {
+    // Find a mock user with this role
+    const user = USERS.find(u => u.role === role);
+    if (!user) return;
+
+    APP_STATE.user = user;
+
+    // Update UI
+    document.querySelectorAll('.avatar, .avatar-lg').forEach(el => el.textContent = user.avatar);
+    if (document.querySelector('.user-name')) document.querySelector('.user-name').textContent = user.name;
+    if (document.querySelector('.user-role')) document.querySelector('.user-role').textContent = user.role;
+
+    // Navigate based on role
+    if (role === 'APPROVER') navigateTo('approver-inbox');
+    else if (role === 'WATCHER') navigateTo('watcher-dashboard');
+    else navigateTo('dashboard');
+
+    toggleUserMenu();
+    showToast(`Switched to ${role} view`, 'success');
+}

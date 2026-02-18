@@ -1,7 +1,86 @@
-// ============================================
-// SAFEWORK PTW - DATA LAYER
-// Simulated Backend Data
-// ============================================
+/* ============================================
+   SAFEWORK PTW - DATA & STATE MANAGEMENT
+   Mock Data & LocalStorage Simulation
+   ============================================ */
+
+const APP_STATE = {
+  user: {
+    id: 'user_001',
+    name: 'John Davies',
+    role: 'REQUESTER', // Options: REQUESTER, APPROVER, WATCHER, ADMIN
+    avatar: 'JD'
+  },
+  currentPermit: null,
+  wizard: {
+    currentStep: 1,
+    totalSteps: 7, // Updated to 7 steps
+    data: {
+      // Camera First Data
+      capturedImage: null,
+      imageTimestamp: null,
+
+      // AI Analysis Data
+      aiAnalysis: {
+        detectedType: null,
+        confidence: 0,
+        detectedRisks: [],
+        suggestedControls: []
+      },
+
+      // Standard Data
+      description: '',
+      location: '',
+      zone: '',
+      permitType: null, // Confirmed type
+      startTime: '',
+      endTime: '',
+      rams: null,
+      competentPerson: null, // Watcher
+      simopsConflicts: []
+    }
+  },
+  notifications: [
+    { id: 1, text: "Permit PTW-2026-0142 approved", time: "2 mins ago", read: false },
+    { id: 2, text: "SIMOPS Alert in Zone C", time: "1 hour ago", read: false },
+    { id: 3, text: "Watcher check-in overdue", time: "3 hours ago", read: true }
+  ],
+  pageHistory: [] // Track navigation history
+};
+
+// Mock AI Analysis Data
+const MOCK_AI_DATA = {
+  default: {
+    type: 'General Work',
+    confidence: 85,
+    risks: ['Slips/Trips', 'Manual Handling'],
+    controls: ['Housekeeping', 'Gloves']
+  },
+  welding: {
+    type: 'Hot Work',
+    confidence: 94,
+    risks: ['Fire Hazard', 'Fumes', 'UV Radiation'],
+    controls: ['Fire Extinguisher', 'Welding Screen', 'Ventilation']
+  },
+  height: {
+    type: 'Work at Height',
+    confidence: 91,
+    risks: ['Fall from Height', 'Falling Objects'],
+    controls: ['Harness', 'Barriers', 'Tool Tethers']
+  },
+  confined: {
+    type: 'Confined Space',
+    confidence: 88,
+    risks: ['Gas Accumulation', 'Low Oxygen', 'Entrapment'],
+    controls: ['Gas Monitor', 'Tripod/Winch', 'Standby Man']
+  }
+};
+
+// Updated Users with Roles
+const USERS = [
+  { id: 'user_001', name: 'John Davies', role: 'REQUESTER', avatar: 'JD' },
+  { id: 'user_002', name: 'Mike Thompson', role: 'APPROVER', avatar: 'MT' },
+  { id: 'user_003', name: 'Sarah Connor', role: 'WATCHER', avatar: 'SC' }
+];
 
 const PTW_DATA = {
   // Current user
@@ -164,6 +243,7 @@ const PTW_DATA = {
       zone: 'Zone C - East Wing',
       contractor: 'Apex Construction Ltd',
       supervisor: 'Mike Thompson',
+      competentPerson: 'user_003', // Sarah Connor (Watcher)
       team: 'Welding Team Alpha (4 persons)',
       startDate: '2026-02-18',
       startTime: '08:00',
@@ -444,32 +524,4 @@ const PTW_DATA = {
 };
 
 // App State
-const APP_STATE = {
-  currentPage: 'dashboard',
-  pageHistory: [],
-  currentPermitId: null,
-  currentDetailTab: 'details',
-  wizard: {
-    currentStep: 1,
-    totalSteps: 6,
-    data: {
-      permitType: null,
-      location: '',
-      zone: '',
-      contractor: '',
-      supervisor: '',
-      team: '',
-      startDate: '',
-      startTime: '',
-      endDate: '',
-      endTime: '',
-      description: '',
-      checklist: [],
-      rams: null,
-      simopsChecked: false,
-      conflicts: []
-    }
-  },
-  filterStatus: 'ALL',
-  notifications: [...PTW_DATA.notifications]
-};
+

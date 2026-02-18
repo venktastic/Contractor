@@ -3,14 +3,14 @@
 // ============================================
 
 function renderPermitDetail() {
-    const permit = findPermit(APP_STATE.currentPermitId);
-    if (!permit) return '<div class="empty-state"><p class="empty-title">Permit not found</p></div>';
+  const permit = findPermit(APP_STATE.currentPermitId);
+  if (!permit) return '<div class="empty-state"><p class="empty-title">Permit not found</p></div>';
 
-    const statusClass = getStatusBadgeClass(permit.status);
-    const statusLabel = getStatusLabel(permit.status);
-    const riskClass = getRiskBadgeClass(permit.riskLevel);
+  const statusClass = getStatusBadgeClass(permit.status);
+  const statusLabel = getStatusLabel(permit.status);
+  const riskClass = getRiskBadgeClass(permit.riskLevel);
 
-    return `
+  return `
     <div>
       <!-- Hero -->
       <div class="permit-detail-hero">
@@ -67,17 +67,17 @@ function renderPermitDetail() {
 }
 
 function renderDetailTabContent(permit) {
-    switch (APP_STATE.currentDetailTab) {
-        case 'details': return renderDetailsTab(permit);
-        case 'rams': return renderRamsTab(permit);
-        case 'checklist': return renderChecklistTab(permit);
-        case 'timeline': return renderTimelineTab(permit);
-        default: return renderDetailsTab(permit);
-    }
+  switch (APP_STATE.currentDetailTab) {
+    case 'details': return renderDetailsTab(permit);
+    case 'rams': return renderRamsTab(permit);
+    case 'checklist': return renderChecklistTab(permit);
+    case 'timeline': return renderTimelineTab(permit);
+    default: return renderDetailsTab(permit);
+  }
 }
 
 function renderDetailsTab(permit) {
-    return `
+  return `
     <div>
       <div class="detail-section">
         <p class="detail-section-title">Job Information</p>
@@ -117,10 +117,10 @@ function renderDetailsTab(permit) {
 }
 
 function renderRamsTab(permit) {
-    const rams = permit.rams;
-    const isValidated = rams.status === 'VALIDATED';
+  const rams = permit.rams;
+  const isValidated = rams.status === 'VALIDATED';
 
-    return `
+  return `
     <div class="rams-section" style="padding:0">
       <!-- Validation Status -->
       <div class="alert ${isValidated ? 'alert-success' : 'alert-warning'}" style="margin-bottom:var(--space-4)">
@@ -204,13 +204,13 @@ function renderRamsTab(permit) {
 }
 
 function renderChecklistTab(permit) {
-    const permitType = getPermitType(permit.type);
-    if (!permitType) return '<p style="color:var(--text-muted)">No checklist available</p>';
+  const permitType = getPermitType(permit.type);
+  if (!permitType) return '<p style="color:var(--text-muted)">No checklist available</p>';
 
-    const checklist = permitType.checklist;
-    const checked = permit.checklist.filter(Boolean).length;
+  const checklist = permitType.checklist;
+  const checked = permit.checklist.filter(Boolean).length;
 
-    return `
+  return `
     <div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4)">
         <p style="font-size:var(--font-size-sm);color:var(--text-secondary)">${checked}/${checklist.length} items verified</p>
@@ -231,11 +231,11 @@ function renderChecklistTab(permit) {
 }
 
 function renderTimelineTab(permit) {
-    return `
+  return `
     <div class="timeline">
       ${permit.auditLog.map(entry => {
-        const style = getAuditIconColor(entry.type);
-        return `
+    const style = getAuditIconColor(entry.type);
+    return `
           <div class="timeline-item">
             <div class="timeline-dot" style="background:${style.bg}">
               <svg viewBox="0 0 24 24" fill="none" stroke="${style.color}" stroke-width="2" width="14" height="14">
@@ -249,46 +249,61 @@ function renderTimelineTab(permit) {
             </div>
           </div>
         `;
-    }).join('')}
+  }).join('')}
     </div>
   `;
 }
 
 function renderPermitActions(permit) {
-    const actions = [];
+  const actions = [];
+  const role = APP_STATE.user.role;
 
-    if (permit.status === 'UNDER_REVIEW') {
-        actions.push(`<button class="btn btn-success btn-full" onclick="approvePermit('${permit.id}')">
+  // APPROVER ACTIONS
+  if (role === 'APPROVER' && (permit.status === 'SUBMITTED' || permit.status === 'UNDER_REVIEW')) {
+    actions.push(`<button class="btn btn-success btn-full" onclick="approvePermit('${permit.id}')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
       Approve Permit
     </button>`);
-        actions.push(`<button class="btn btn-danger btn-full" onclick="rejectPermit('${permit.id}')">
+    actions.push(`<button class="btn btn-danger btn-full" onclick="rejectPermit('${permit.id}')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
       Reject Permit
     </button>`);
-    }
+  }
 
-    if (permit.status === 'ACTIVE') {
-        actions.push(`<button class="btn btn-warning btn-full" onclick="suspendPermit('${permit.id}')">
+  // WATCHER ACTIONS
+  if (role === 'WATCHER' && permit.status === 'ACTIVE') {
+    actions.push(`<button class="btn btn-primary btn-full" onclick="logCheckIn('${permit.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
+      Log Safety Check
+    </button>`);
+    actions.push(`<button class="btn btn-danger btn-full" onclick="showStopWorkModal('${permit.id}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      Report Unsafe Condition
+    </button>`);
+  }
+
+  // REQUESTER / MANAGER ACTIONS
+  if ((role === 'REQUESTER' || role === 'ADMIN') && permit.status === 'ACTIVE') {
+    actions.push(`<button class="btn btn-warning btn-full" onclick="suspendPermit('${permit.id}')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
       Suspend Permit
     </button>`);
-        actions.push(`<button class="btn btn-secondary btn-full" onclick="closePermit('${permit.id}')">
+    actions.push(`<button class="btn btn-secondary btn-full" onclick="closePermit('${permit.id}')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polyline points="20 6 9 17 4 12"/></svg>
       Close Permit
     </button>`);
-    }
+  }
 
-    if (permit.status === 'SUSPENDED') {
-        actions.push(`<button class="btn btn-success btn-full" onclick="reactivatePermit('${permit.id}')">
+  if (permit.status === 'SUSPENDED' && (role === 'ADMIN' || role === 'APPROVER')) {
+    actions.push(`<button class="btn btn-success btn-full" onclick="reactivatePermit('${permit.id}')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18" height="18"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       Reactivate Permit
     </button>`);
-    }
+  }
 
-    if (actions.length === 0) return '';
+  if (actions.length === 0) return '';
 
-    return `
+  return `
     <div style="padding:var(--space-4);display:flex;flex-direction:column;gap:var(--space-3);border-top:1px solid var(--border)">
       ${actions.join('')}
     </div>
@@ -296,100 +311,127 @@ function renderPermitActions(permit) {
 }
 
 function switchDetailTab(tab) {
-    APP_STATE.currentDetailTab = tab;
-    const permit = findPermit(APP_STATE.currentPermitId);
-    document.getElementById('detail-tab-content').innerHTML = renderDetailTabContent(permit);
-    document.querySelectorAll('.detail-tab').forEach(t => {
-        t.classList.remove('active');
-        if (t.textContent.trim().toLowerCase().includes(tab === 'timeline' ? 'audit' : tab)) {
-            t.classList.add('active');
-        }
-    });
+  APP_STATE.currentDetailTab = tab;
+  const permit = findPermit(APP_STATE.currentPermitId);
+  document.getElementById('detail-tab-content').innerHTML = renderDetailTabContent(permit);
+  document.querySelectorAll('.detail-tab').forEach(t => {
+    t.classList.remove('active');
+    if (t.textContent.trim().toLowerCase().includes(tab === 'timeline' ? 'audit' : tab)) {
+      t.classList.add('active');
+    }
+  });
 }
 
 function approvePermit(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
+  const permit = findPermit(id);
+  if (!permit) return;
 
-    if (permit.rams.status !== 'VALIDATED') {
-        showToast('Cannot approve: RAMS document not validated', 'error', 4000); return;
-    }
+  if (permit.rams.status !== 'VALIDATED') {
+    showToast('Cannot approve: RAMS document not validated', 'error', 4000); return;
+  }
 
-    permit.status = 'APPROVED';
-    permit.approvedBy = 'John Davies';
-    permit.approvedAt = new Date().toISOString();
-    permit.auditLog.unshift({ action: 'Permit Approved', user: 'John Davies', time: new Date().toISOString(), type: 'approve', detail: 'All conditions met. RAMS validated.' });
+  permit.status = 'APPROVED';
+  permit.approvedBy = 'John Davies';
+  permit.approvedAt = new Date().toISOString();
+  permit.auditLog.unshift({ action: 'Permit Approved', user: 'John Davies', time: new Date().toISOString(), type: 'approve', detail: 'All conditions met. RAMS validated.' });
 
-    showToast('Permit approved successfully!', 'success');
-    renderPage('permit-detail');
+  showToast('Permit approved successfully!', 'success');
+  renderPage('permit-detail');
 }
 
 function rejectPermit(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
-    permit.status = 'REJECTED';
-    permit.auditLog.unshift({ action: 'Permit Rejected', user: 'John Davies', time: new Date().toISOString(), type: 'reject' });
-    showToast('Permit rejected', 'error');
-    renderPage('permit-detail');
+  const permit = findPermit(id);
+  if (!permit) return;
+  permit.status = 'REJECTED';
+  permit.auditLog.unshift({ action: 'Permit Rejected', user: 'John Davies', time: new Date().toISOString(), type: 'reject' });
+  showToast('Permit rejected', 'error');
+  renderPage('permit-detail');
 }
 
 function suspendPermit(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
-    permit.status = 'SUSPENDED';
-    permit.suspendedReason = 'Suspended by HSE Manager pending investigation.';
-    permit.auditLog.unshift({ action: 'Permit Suspended', user: 'John Davies', time: new Date().toISOString(), type: 'suspend', detail: 'Suspended by HSE Manager' });
-    showToast('Permit suspended', 'warning');
-    renderPage('permit-detail');
+  const permit = findPermit(id);
+  if (!permit) return;
+  permit.status = 'SUSPENDED';
+  permit.suspendedReason = 'Suspended by HSE Manager pending investigation.';
+  permit.auditLog.unshift({ action: 'Permit Suspended', user: 'John Davies', time: new Date().toISOString(), type: 'suspend', detail: 'Suspended by HSE Manager' });
+  showToast('Permit suspended', 'warning');
+  renderPage('permit-detail');
 }
 
 function reactivatePermit(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
-    permit.status = 'ACTIVE';
-    permit.auditLog.unshift({ action: 'Permit Reactivated', user: 'John Davies', time: new Date().toISOString(), type: 'activate' });
-    showToast('Permit reactivated', 'success');
-    renderPage('permit-detail');
+  const permit = findPermit(id);
+  if (!permit) return;
+  permit.status = 'ACTIVE';
+  permit.auditLog.unshift({ action: 'Permit Reactivated', user: 'John Davies', time: new Date().toISOString(), type: 'activate' });
+  showToast('Permit reactivated', 'success');
+  renderPage('permit-detail');
 }
 
 function closePermit(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
-    permit.status = 'CLOSED';
-    permit.auditLog.unshift({ action: 'Permit Closed', user: 'John Davies', time: new Date().toISOString(), type: 'close', detail: 'Work completed. Site cleared.' });
-    showToast('Permit closed', 'success');
-    renderPage('permit-detail');
+  const permit = findPermit(id);
+  if (!permit) return;
+  permit.status = 'CLOSED';
+  permit.auditLog.unshift({ action: 'Permit Closed', user: 'John Davies', time: new Date().toISOString(), type: 'close', detail: 'Work completed. Site cleared.' });
+  showToast('Permit closed', 'success');
+  renderPage('permit-detail');
 }
 
 function validateRams(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
-    permit.rams.status = 'VALIDATED';
-    permit.rams.files.forEach(f => { f.validated = true; f.validatedBy = 'John Davies'; });
-    permit.auditLog.unshift({ action: 'RAMS Validated', user: 'John Davies', time: new Date().toISOString(), type: 'validate' });
-    showToast('RAMS document validated', 'success');
-    switchDetailTab('rams');
+  const permit = findPermit(id);
+  if (!permit) return;
+  permit.rams.status = 'VALIDATED';
+  permit.rams.files.forEach(f => { f.validated = true; f.validatedBy = 'John Davies'; });
+  permit.auditLog.unshift({ action: 'RAMS Validated', user: 'John Davies', time: new Date().toISOString(), type: 'validate' });
+  showToast('RAMS document validated', 'success');
+  switchDetailTab('rams');
 }
 
 function simulateNewRamsVersion(id) {
-    const permit = findPermit(id);
-    if (!permit) return;
-    const newVersion = permit.rams.files.length + 1;
-    permit.rams.status = 'PENDING';
-    permit.rams.files.unshift({
-        name: `RAMS_Document_v${newVersion}.pdf`,
-        size: '2.3 MB',
-        type: 'pdf',
-        version: newVersion,
-        date: '2026-02-18',
-        validated: false
-    });
-    permit.auditLog.unshift({ action: `RAMS Updated (v${newVersion})`, user: 'John Davies', time: new Date().toISOString(), type: 'upload', detail: 'New version uploaded. Validation reset.' });
-    showToast('New RAMS version uploaded. Validation required.', 'warning', 4000);
-    switchDetailTab('rams');
+  const permit = findPermit(id);
+  if (!permit) return;
+  const newVersion = permit.rams.files.length + 1;
+  permit.rams.status = 'PENDING';
+  permit.rams.files.unshift({
+    name: `RAMS_Document_v${newVersion}.pdf`,
+    size: '2.3 MB',
+    type: 'pdf',
+    version: newVersion,
+    date: '2026-02-18',
+    validated: false
+  });
+  permit.auditLog.unshift({ action: `RAMS Updated (v${newVersion})`, user: 'John Davies', time: new Date().toISOString(), type: 'upload', detail: 'New version uploaded. Validation reset.' });
+  showToast('New RAMS version uploaded. Validation required.', 'warning', 4000);
+  switchDetailTab('rams');
 }
 
 function showQrCode(id) {
-    APP_STATE.currentPermitId = id;
-    navigateTo('qr-view');
+  APP_STATE.currentPermitId = id;
+  navigateTo('qr-view');
+}
+
+function logCheckIn(id) {
+  const permit = findPermit(id);
+  if (!permit) return;
+
+  // Simulate check-in
+  permit.auditLog.unshift({
+    action: 'Safety Check Logged',
+    user: APP_STATE.user.name,
+    time: new Date().toISOString(),
+    type: 'validate',
+    detail: 'Zone safety verified. No hazards detected.'
+  });
+
+  showToast('Safety check logged successfully', 'success');
+  renderPage('permit-detail');
+}
+
+function showStopWorkModal(id) {
+  // Reuse the modal from watcher-dashboard if available, or simpler implementation here
+  const reason = prompt("Enter reason for stopping work:");
+  if (reason) {
+    suspendPermit(id);
+    const permit = findPermit(id);
+    if (permit) permit.suspendedReason = reason;
+  }
 }

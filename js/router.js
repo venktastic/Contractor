@@ -60,7 +60,10 @@ function renderPage(page) {
         'audit-log': renderAuditLog,
         'notifications': renderNotifications,
         'admin': renderAdmin,
-        'qr-view': renderQrView
+        'qr-view': renderQrView,
+        'approver-inbox': renderApproverInbox,
+        'watcher-dashboard': renderWatcherDashboard,
+        'active-permit': renderPermitDetail // Reusing detail view for now
     };
 
     const renderer = pages[page];
@@ -79,7 +82,9 @@ function updateBottomNav(page) {
         'permit-list': 'nav-permits',
         'create-permit': 'nav-create',
         'simops-dashboard': 'nav-simops',
-        'audit-log': 'nav-audit'
+        'audit-log': 'nav-audit',
+        'approver-inbox': 'nav-dashboard', // Highlight dashboard for these roles
+        'watcher-dashboard': 'nav-dashboard'
     };
 
     document.querySelectorAll('.bottom-nav-item').forEach(btn => {
@@ -95,7 +100,7 @@ function updateBottomNav(page) {
 
 function updateBackButton(page) {
     const backBtn = document.getElementById('back-btn');
-    const noBackPages = ['dashboard', 'permit-list', 'simops-dashboard', 'audit-log', 'notifications'];
+    const noBackPages = ['dashboard', 'permit-list', 'simops-dashboard', 'audit-log', 'notifications', 'approver-inbox', 'watcher-dashboard'];
 
     if (backBtn) {
         if (noBackPages.includes(page)) {
@@ -116,7 +121,10 @@ function updateNavTitle(page) {
         'audit-log': 'Audit Log',
         'notifications': 'Notifications',
         'admin': 'Admin Settings',
-        'qr-view': 'Permit View'
+        'qr-view': 'Permit View',
+        'approver-inbox': 'Approval Inbox',
+        'watcher-dashboard': 'Watcher Dashboard',
+        'active-permit': 'Active Permit'
     };
 
     const titleEl = document.getElementById('nav-title');
