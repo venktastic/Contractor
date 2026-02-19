@@ -1,136 +1,108 @@
-// ============================================
-// SAFEWORK PTW - ROUTER
-// Single Page Application Navigation
-// ============================================
+/* ============================================================
+   HSW Digital — Contractor Management Portal
+   router.js — Client-Side Router
+   ============================================================ */
+
+const ROUTER = {
+    currentPage: null,
+    currentParams: {},
+    history: []
+};
 
 function navigateTo(page, params = {}) {
-    // Close user menu if open
-    const userMenu = document.getElementById('user-menu');
-    if (userMenu) userMenu.classList.add('hidden');
-
-    // Save current page to history
-    if (APP_STATE.currentPage !== page) {
-        APP_STATE.pageHistory.push(APP_STATE.currentPage);
+    // Update state
+    if (ROUTER.currentPage) {
+        ROUTER.history.push({ page: ROUTER.currentPage, params: ROUTER.currentParams });
     }
 
-    APP_STATE.currentPage = page;
-
-    // Update params
-    if (params.permitId) APP_STATE.currentPermitId = params.permitId;
+    ROUTER.currentPage = page;
+    ROUTER.currentParams = params;
 
     // Render page
-    renderPage(page);
+    const container = document.getElementById('page-container');
 
-    // Update bottom nav
-    updateBottomNav(page);
+    // Clear previous content
+    container.innerHTML = '';
 
-    // Update back button
-    updateBackButton(page);
+    // Rendering logic based on page
+    let content = '';
 
-    // Update nav title
-    updateNavTitle(page);
+    try {
+        switch (page) {
+            case 'dashboard':
+                content = renderDashboard();
+                break;
+            case 'contractors':
+                content = renderContractors();
+                break;
+            case 'contractor-profile':
+                content = renderContractorProfile(params.id);
+                break;
+            case 'onboarding':
+                content = renderOnboarding();
+                break;
+            case 'workforce':
+                content = renderWorkforce();
+                break;
+            case 'performance':
+                content = renderPerformance();
+                break;
+            case 'compliance-alerts':
+                content = renderComplianceAlerts();
+                break;
+            case 'reports':
+                content = renderReports();
+                break;
+            case 'settings':
+                content = renderSettings();
+                break;
+            default:
+                content = renderDashboard(); // Default to dashboard
+        }
+
+        container.innerHTML = content;
+
+        // Post-render init (charts, etc.)
+        if (page === 'dashboard' && window.initDashboard) window.initDashboard();
+        if (page === 'contractors' && window.initContractors) window.initContractors();
+        if (page === 'contractor-profile' && window.initContractorProfile) window.initContractorProfile(params.id);
+        if (page === 'reports' && window.initReports) window.initReports();
+
+    } catch (error) {
+        console.error(`Error rendering page ${page}:`, error);
+        container.innerHTML = `
+      <div style="padding: 2rem; color: var(--danger); text-align: center;">
+        <h2>Error Loading Module</h2>
+        <p>Failed to load ${page}. Please try again.</p>
+        <p style="font-size: 0.8rem; opacity: 0.7; margin-top: 1rem;">${error.message}</p>
+      </div>
+    `;
+    }
+
+    // Update Navigation State
+    updateActiveNavItem(page);
 
     // Scroll to top
-    const container = document.getElementById('page-container');
-    if (container) container.scrollTop = 0;
+    container.scrollTop = 0;
 }
 
-function goBack() {
-    if (APP_STATE.pageHistory.length > 0) {
-        const prev = APP_STATE.pageHistory.pop();
-        APP_STATE.currentPage = prev;
-        renderPage(prev);
-        updateBottomNav(prev);
-        updateBackButton(prev);
-        updateNavTitle(prev);
-    } else {
-        navigateTo('dashboard');
+function updateActiveNavItem(page) {
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+    // Add to current
+    const activeBtn = document.getElementById(`nav-${page}`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    } else if (page === 'contractor-profile') {
+        // Keep contractors active when viewing profile
+        document.getElementById('nav-contractors')?.classList.add('active');
     }
 }
 
-function renderPage(page) {
-    const container = document.getElementById('page-container');
-
-    const pages = {
-        'dashboard': renderDashboard,
-        'permit-list': renderPermitList,
-        'create-permit': renderCreatePermit,
-        'permit-detail': renderPermitDetail,
-        'simops-dashboard': renderSimopsDashboard,
-        'audit-log': renderAuditLog,
-        'notifications': renderNotifications,
-        'admin': renderAdmin,
-        'qr-view': renderQrView,
-        'approver-inbox': renderApproverInbox,
-        'watcher-dashboard': renderWatcherDashboard,
-        'active-permit': renderPermitDetail, // Reusing detail view for now
-        'workforce': renderWorkforce,
-        'performance': renderPerformance,
-        'compliance-alerts': renderComplianceAlerts,
-        'settings': renderSettings
-    };
-
-    const renderer = pages[page];
-    if (renderer) {
-        container.innerHTML = `<div class="page">${renderer()}</div>`;
-        // Run post-render hooks
-        if (window[`init_${page.replace(/-/g, '_')}`]) {
-            window[`init_${page.replace(/-/g, '_')}`]();
-        }
+// Initial Load
+window.addEventListener('popstate', (e) => {
+    if (e.state) {
+        navigateTo(e.state.page, e.state.params);
     }
-}
-
-function updateBottomNav(page) {
-    const navMap = {
-        'dashboard': 'nav-dashboard',
-        'permit-list': 'nav-permits',
-        'create-permit': 'nav-create',
-        'simops-dashboard': 'nav-simops',
-        'audit-log': 'nav-audit',
-        'approver-inbox': 'nav-dashboard', // Highlight dashboard for these roles
-        'watcher-dashboard': 'nav-dashboard'
-    };
-
-    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
-        btn.classList.remove('active');
-    });
-
-    const activeId = navMap[page];
-    if (activeId) {
-        const activeBtn = document.getElementById(activeId);
-        if (activeBtn) activeBtn.classList.add('active');
-    }
-}
-
-function updateBackButton(page) {
-    const backBtn = document.getElementById('back-btn');
-    const noBackPages = ['dashboard', 'permit-list', 'simops-dashboard', 'audit-log', 'notifications', 'approver-inbox', 'watcher-dashboard'];
-
-    if (backBtn) {
-        if (noBackPages.includes(page)) {
-            backBtn.classList.add('hidden');
-        } else {
-            backBtn.classList.remove('hidden');
-        }
-    }
-}
-
-function updateNavTitle(page) {
-    const titles = {
-        'dashboard': 'ePermits',
-        'permit-list': 'All Permits',
-        'create-permit': 'New Permit',
-        'permit-detail': 'Permit Details',
-        'simops-dashboard': 'SIMOPS Monitor',
-        'audit-log': 'Audit Log',
-        'notifications': 'Notifications',
-        'admin': 'Admin Settings',
-        'qr-view': 'Permit View',
-        'approver-inbox': 'Approval Inbox',
-        'watcher-dashboard': 'Watcher Dashboard',
-        'active-permit': 'Active Permit'
-    };
-
-    const titleEl = document.getElementById('nav-title');
-    if (titleEl) titleEl.textContent = titles[page] || 'SafeWork PTW';
-}
+});
