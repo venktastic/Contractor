@@ -3,23 +3,22 @@
 // ============================================
 
 function renderDashboard() {
-    const now = new Date('2026-02-18T11:34:00');
-    const dateStr = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateStr = 'Monday, 24 February 2026';
 
-    const active = PTW_DATA.permits.filter(p => p.status === 'ACTIVE').length;
-    const approved = PTW_DATA.permits.filter(p => p.status === 'APPROVED').length;
-    const underReview = PTW_DATA.permits.filter(p => p.status === 'UNDER_REVIEW').length;
-    const suspended = PTW_DATA.permits.filter(p => p.status === 'SUSPENDED').length;
-    const conflicts = PTW_DATA.permits.filter(p => p.simopsConflicts && p.simopsConflicts.length > 0).length;
+  const active = PTW_DATA.permits.filter(p => p.status === 'ACTIVE').length;
+  const approved = PTW_DATA.permits.filter(p => p.status === 'APPROVED').length;
+  const underReview = PTW_DATA.permits.filter(p => p.status === 'UNDER_REVIEW').length;
+  const suspended = PTW_DATA.permits.filter(p => p.status === 'SUSPENDED').length;
+  const conflicts = PTW_DATA.permits.filter(p => p.simopsConflicts && p.simopsConflicts.length > 0).length;
 
-    const recentPermits = PTW_DATA.permits.slice(0, 3);
+  const recentPermits = PTW_DATA.permits.slice(0, 3);
 
-    return `
+  return `
     <div class="dashboard-page">
       <!-- Hero -->
       <div class="dashboard-hero">
-        <p class="hero-greeting">Good morning,</p>
-        <h1 class="hero-title">John <span>Davies</span></h1>
+        <p class="hero-greeting">Permit to Work</p>
+        <h1 class="hero-title" style="color:white;background:none;-webkit-background-clip:unset;-webkit-text-fill-color:white">Prakash Senghani</h1>
         <p class="hero-date">📅 ${dateStr}</p>
       </div>
 
@@ -142,11 +141,11 @@ function renderDashboard() {
 }
 
 function renderPermitCard(permit) {
-    const statusClass = getStatusBadgeClass(permit.status);
-    const statusLabel = getStatusLabel(permit.status);
-    const riskClass = getRiskBadgeClass(permit.riskLevel);
+  const statusClass = getStatusBadgeClass(permit.status);
+  const statusLabel = getStatusLabel(permit.status);
+  const riskClass = getRiskBadgeClass(permit.riskLevel);
 
-    return `
+  return `
     <div class="permit-card risk-${permit.riskLevel.toLowerCase()}-card" onclick="navigateTo('permit-detail', {permitId: '${permit.id}'})">
       <div class="permit-card-header">
         <div>

@@ -6,9 +6,9 @@
 const APP_STATE = {
   user: {
     id: 'user_001',
-    name: 'John Davies',
+    name: 'Prakash Senghani',
     role: 'REQUESTER', // Options: REQUESTER, APPROVER, WATCHER, ADMIN
-    avatar: 'JD'
+    avatar: 'PS'
   },
   currentPermit: null,
   wizard: {
@@ -77,7 +77,7 @@ const MOCK_AI_DATA = {
 
 // Updated Users with Roles
 const USERS = [
-  { id: 'user_001', name: 'John Davies', role: 'REQUESTER', avatar: 'JD' },
+  { id: 'user_001', name: 'Prakash Senghani', role: 'REQUESTER', avatar: 'PS' },
   { id: 'user_002', name: 'Mike Thompson', role: 'APPROVER', avatar: 'MT' },
   { id: 'user_003', name: 'Sarah Connor', role: 'WATCHER', avatar: 'SC' }
 ];
