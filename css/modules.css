@@ -1724,3 +1724,159 @@
     font-weight: 700;
     margin-left: 5px;
 }
+
+/* ============================================================
+   ENTERPRISE BUTTON OVERRIDES — DEFINITIVE LAST WORD
+   These override all prior CSS files that use invalid/old variables
+   ============================================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    white-space: nowrap;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+}
+
+.btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.btn-primary {
+    background: #2563EB !important;
+    color: #ffffff !important;
+    border-color: #1D4ED8 !important;
+    box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+}
+
+.btn-primary:hover {
+    background: #1D4ED8 !important;
+}
+
+.btn-secondary {
+    background: #F8FAFC !important;
+    color: #334155 !important;
+    border: 1px solid #CBD5E1 !important;
+}
+
+.btn-secondary:hover {
+    background: #F1F5F9 !important;
+    border-color: #94A3B8 !important;
+}
+
+.btn-danger {
+    background: #DC2626 !important;
+    color: #ffffff !important;
+    border-color: #B91C1C !important;
+}
+
+.btn-danger:hover {
+    background: #B91C1C !important;
+}
+
+.btn-success {
+    background: #059669 !important;
+    color: #ffffff !important;
+    border-color: #047857 !important;
+}
+
+.btn-success:hover {
+    background: #047857 !important;
+}
+
+.btn-warning {
+    background: #D97706 !important;
+    color: #ffffff !important;
+    border-color: #B45309 !important;
+}
+
+.btn-warning:hover {
+    background: #B45309 !important;
+}
+
+.btn-ghost {
+    background: transparent !important;
+    color: #64748B !important;
+    border: 1px solid #E2E8F0 !important;
+}
+
+.btn-ghost:hover {
+    background: #F1F5F9 !important;
+    color: #0F172A !important;
+}
+
+.btn-outline-primary {
+    background: transparent !important;
+    color: #2563EB !important;
+    border: 1px solid #2563EB !important;
+}
+
+.btn-outline-primary:hover {
+    background: #EFF6FF !important;
+}
+
+.btn-sm {
+    padding: 5px 10px !important;
+    font-size: 11px !important;
+    min-height: unset !important;
+}
+
+.btn-sm svg {
+    width: 12px;
+    height: 12px;
+}
+
+.btn-lg {
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    min-height: unset !important;
+}
+
+.btn:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* AI Panel buttons */
+.ai-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #7C3AED !important;
+    color: #ffffff !important;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    line-height: 1;
+}
+
+.ai-btn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.ai-btn:hover {
+    background: #6D28D9 !important;
+}
+
+.ai-btn.secondary {
+    background: #ffffff !important;
+    color: #7C3AED !important;
+    border: 1px solid rgba(124, 58, 237, 0.3) !important;
+}

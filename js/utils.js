@@ -1,293 +1,247 @@
 /* ============================================================
    HSW Digital — Contractor Management Portal
-   utils.js — Utility Functions
+   utils.js — Shared Utility Functions
    ============================================================ */
 
-// ── Date Utilities ──
-function formatDate(dateStr) {
+// ── Toast Notifications ─────────────────────────────────────
+const TOAST_ICONS = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    danger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+};
+
+function showToast(message, type = 'info', duration = 3500) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `${TOAST_ICONS[type] || TOAST_ICONS.info}<span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100%)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// ── Modal System ────────────────────────────────────────────
+function openModal(html) {
+    const container = document.getElementById('modal-container');
+    if (container) container.innerHTML = html;
+}
+function closeModal() {
+    const container = document.getElementById('modal-container');
+    if (container) container.innerHTML = '';
+}
+
+// ── Formatters ──────────────────────────────────────────────
+function fmtDate(dateStr) {
     if (!dateStr) return '—';
     const d = new Date(dateStr);
     return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short', year: 'numeric' });
 }
-
+function fmtDateShort(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-AU', { day: '2-digit', month: 'short' });
+}
 function daysUntil(dateStr) {
     if (!dateStr) return null;
-    const now = new Date(); now.setHours(0, 0, 0, 0);
-    const target = new Date(dateStr); target.setHours(0, 0, 0, 0);
-    return Math.round((target - now) / (1000 * 60 * 60 * 24));
+    const diff = new Date(dateStr) - new Date();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+function isExpired(dateStr) { return daysUntil(dateStr) < 0; }
+function isExpiringSoon(dateStr, days = 30) {
+    const d = daysUntil(dateStr);
+    return d !== null && d >= 0 && d <= days;
 }
 
-function expiryStatus(dateStr) {
-    const days = daysUntil(dateStr);
-    if (days === null) return 'unknown';
-    if (days < 0) return 'expired';
-    if (days <= 7) return 'critical';
-    if (days <= 30) return 'expiring';
-    return 'valid';
-}
-
-function expiryBadge(dateStr) {
-    const days = daysUntil(dateStr);
-    const status = expiryStatus(dateStr);
-    if (status === 'expired') return `<span class="badge badge-noncompliant">Expired</span>`;
-    if (status === 'critical') return `<span class="badge badge-noncompliant">Expires in ${days}d</span>`;
-    if (status === 'expiring') return `<span class="badge badge-expiring">Expires in ${days}d</span>`;
-    return `<span class="badge badge-compliant">${formatDate(dateStr)}</span>`;
-}
-
-// ── Status Badges ──
-function statusBadge(status) {
+// ── Badge Helpers ────────────────────────────────────────────
+function getStatusBadge(status) {
     const map = {
         'Approved': 'badge-approved',
         'Draft': 'badge-draft',
-        'Submitted': 'badge-submitted',
         'Under Review': 'badge-review',
-        'Rejected': 'badge-rejected',
         'Suspended': 'badge-suspended',
-        'Compliant': 'badge-compliant',
-        'Expiring': 'badge-expiring',
-        'Non-Compliant': 'badge-noncompliant',
-        'Open': 'badge-submitted',
-        'Closed': 'badge-compliant',
-        'Overdue': 'badge-noncompliant',
+        'Non-Compliant': 'badge-danger',
+        'Expiring': 'badge-warning',
+        'Compliant': 'badge-approved',
+        'Overdue': 'badge-critical',
+        'Open': 'badge-warning',
+        'Closed': 'badge-approved',
         'Under Investigation': 'badge-review'
     };
-    return `<span class="badge ${map[status] || 'badge-draft'}">${status}</span>`;
+    return map[status] || 'badge-draft';
 }
 
-function riskBadge(level) {
-    const map = { 'Low': 'badge-low', 'Medium': 'badge-medium', 'High': 'badge-high', 'Critical': 'badge-critical' };
-    return `<span class="badge ${map[level] || 'badge-draft'}">${level} Risk</span>`;
+function getRiskBadge(level) {
+    const map = {
+        'Low': 'risk-low',
+        'Medium': 'risk-medium',
+        'High': 'risk-high',
+        'Critical': 'risk-critical'
+    };
+    return map[level] || 'risk-low';
 }
 
-function complianceBadge(pct) {
-    if (pct >= 90) return `<span class="badge badge-compliant">${pct}%</span>`;
-    if (pct >= 70) return `<span class="badge badge-expiring">${pct}%</span>`;
-    return `<span class="badge badge-noncompliant">${pct}%</span>`;
+function getRiskScoreClass(score) {
+    if (score >= 80) return 'risk-critical';
+    if (score >= 60) return 'risk-high';
+    if (score >= 40) return 'risk-medium';
+    return 'risk-low';
 }
 
-function riskScoreBadge(score, level) {
-    return `<div class="risk-score-badge ${level.toLowerCase()}">
-    <span class="score-num">${score}</span>
-    <div><div class="score-label">Risk Score</div><div style="font-size:11px;font-weight:700">${level}</div></div>
+function getComplianceClass(pct) {
+    if (pct >= 90) return 'good';
+    if (pct >= 75) return 'ok';
+    return 'bad';
+}
+
+function getProgressClass(pct) {
+    if (pct >= 90) return 'progress-good';
+    if (pct >= 70) return 'progress-ok';
+    return 'progress-bad';
+}
+
+// ── Mini Sparkline (SVG) ─────────────────────────────────────
+function renderSparkline(data, color, width = 80, height = 32) {
+    if (!data || data.length < 2) return '';
+    const min = Math.min(...data);
+    const max = Math.max(...data);
+    const range = max - min || 1;
+    const pts = data.map((v, i) => {
+        const x = (i / (data.length - 1)) * width;
+        const y = height - ((v - min) / range) * (height - 4) - 2;
+        return `${x},${y}`;
+    }).join(' ');
+    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="display:block">
+    <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+}
+
+// ── Bar Chart Helper ─────────────────────────────────────────
+function renderBarChart(labels, values, color, maxHeight = 140) {
+    const max = Math.max(...values, 1);
+    return `<div class="bar-chart-wrap">
+    ${labels.map((l, i) => `
+      <div class="bar-col">
+        <div class="bar-fill" style="height:${(values[i] / max) * maxHeight}px;background:${color};border-radius:4px 4px 0 0;"></div>
+        <div class="bar-label">${l}</div>
+      </div>`).join('')}
   </div>`;
 }
 
-// ── Risk Calculation ──
-function calculateRiskLevel(score) {
-    if (score >= 80) return 'Critical';
-    if (score >= 60) return 'High';
-    if (score >= 35) return 'Medium';
-    return 'Low';
+// ── Time filter ───────────────────────────────────────────────
+let APP_TIME_FILTER = 'monthly';
+function setTimeFilter(filter) {
+    APP_TIME_FILTER = filter;
+    document.querySelectorAll('.topbar-filter-pill').forEach(el => el.classList.remove('active'));
+    const el = document.getElementById(`filter-${filter}`);
+    if (el) el.classList.add('active');
+    // Re-render current page
+    if (ROUTER && ROUTER.currentPage) navigateTo(ROUTER.currentPage, ROUTER.currentParams);
 }
 
-function getRiskColor(level) {
-    const map = { 'Low': '#10B981', 'Medium': '#F59E0B', 'High': '#F97316', 'Critical': '#DC2626' };
-    return map[level] || '#94A3B8';
-}
-
-// ── Compliance Status ──
-function workerComplianceStatus(worker) {
-    const days = daysUntil(worker.expiryDate);
-    if (days === null) return 'Non-Compliant';
-    if (days < 0) return 'Non-Compliant';
-    if (days <= 30) return 'Expiring';
-    return 'Compliant';
-}
-
-// ── Escalation Engine ──
-function checkEscalation(contractor) {
-    const actions = getActionsByContractor(contractor.id);
-    const overdue = actions.filter(a => a.status === 'Overdue').length;
-    const total = actions.length;
-    const overduePercent = total > 0 ? (overdue / total) * 100 : 0;
-    const incidents90d = contractor.incidents90d || 0;
-    const compliance = contractor.compliancePercent || 100;
-
-    const reasons = [];
-    if (overduePercent >= 20) reasons.push(`${Math.round(overduePercent)}% corrective actions overdue`);
-    if (incidents90d >= 3) reasons.push(`${incidents90d} serious incidents in rolling 90 days`);
-    if (compliance < 80) reasons.push(`Workforce compliance ${compliance}% (below 80% threshold)`);
-
-    return { triggered: reasons.length > 0, reasons };
-}
-
-function markEscalationReviewed(contractorId, reviewerName, notes) {
-    const existing = DB.escalationLog.find(e => e.contractorId === contractorId && e.status === 'Open');
-    if (existing) {
-        existing.status = 'Reviewed';
-        existing.reviewedBy = reviewerName;
-        existing.reviewDate = new Date().toISOString().split('T')[0];
-        existing.notes = notes;
-    } else {
-        DB.escalationLog.unshift({
-            id: 'esc-' + Date.now(),
-            contractorId, contractor: DB.contractors.find(c => c.id === contractorId)?.name || '',
-            date: new Date().toISOString().split('T')[0],
-            trigger: 'Manual review',
-            status: 'Reviewed', reviewedBy: reviewerName,
-            reviewDate: new Date().toISOString().split('T')[0], notes
-        });
-    }
-}
-
-// ── Trend Arrow ──
-function trendArrow(direction, pct) {
-    const isGood = direction === 'down'; // for IFR, down=good; compliance up=good handled separately
-    const color = isGood ? 'var(--color-compliant)' : 'var(--color-noncompliant)';
-    const arrow = direction === 'up' ? '▲' : direction === 'down' ? '▼' : '—';
-    return `<span style="color:${color};font-weight:700;font-size:11px">${arrow} ${Math.abs(pct)}%</span>`;
-}
-
-function trendArrowGoodUp(direction, pct) {
-    // for compliance, workforce — up is good
-    const color = direction === 'up' ? 'var(--color-compliant)' : direction === 'down' ? 'var(--color-noncompliant)' : 'var(--text-muted)';
-    const arrow = direction === 'up' ? '▲' : direction === 'down' ? '▼' : '—';
-    return `<span style="color:${color};font-weight:700;font-size:11px">${arrow} ${Math.abs(pct)}%</span>`;
-}
-
-function ifrTrendBadge(trend) {
-    if (trend === 'up') return `<span class="badge badge-noncompliant" style="font-size:10px">↑ IFR Rising</span>`;
-    if (trend === 'down') return `<span class="badge badge-compliant" style="font-size:10px">↓ IFR Falling</span>`;
-    return `<span class="badge badge-expiring" style="font-size:10px">→ Stable</span>`;
-}
-
-function predictiveRiskBadge(risk) {
-    const map = {
-        'High Risk / Poor Control': 'badge-critical',
-        'Deteriorating': 'badge-high',
-        'Stable': 'badge-expiring',
-        'Improving': 'badge-compliant',
-        'High Performing': 'badge-approved'
-    };
-    return `<span class="badge ${map[risk] || 'badge-draft'}" style="font-size:10px">🤖 ${risk}</span>`;
-}
-
-// ── Toast Notifications ──
-function showToast(message, type = 'info', duration = 3500) {
-    const container = document.getElementById('toast-container');
-    const icons = {
-        success: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
-        error: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
-        warning: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-        info: '<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-    };
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `${icons[type] || icons.info}<span>${message}</span>`;
-    container.appendChild(toast);
-    setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(20px)'; toast.style.transition = '0.3s ease'; setTimeout(() => toast.remove(), 300); }, duration);
-}
-
-// ── Modal ──
-function openModal(html) {
-    const container = document.getElementById('modals-container');
-    container.innerHTML = html;
-    document.body.style.overflow = 'hidden';
-}
-function closeModal() {
-    document.getElementById('modals-container').innerHTML = '';
-    document.body.style.overflow = '';
-}
-
-// ── Export CSV ──
-function exportCSV(data, filename) {
-    if (!data || !data.length) { showToast('No data to export', 'warning'); return; }
-    const headers = Object.keys(data[0]);
-    const rows = data.map(row => headers.map(h => `"${(row[h] || '').toString().replace(/"/g, '""')}"`).join(','));
-    const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename + '.csv'; a.click();
-    URL.revokeObjectURL(url);
-    showToast(`Exported ${data.length} records`, 'success');
-}
-
-// ── Pagination ──
-function paginate(data, page, perPage = 10) {
-    const start = (page - 1) * perPage;
-    return { items: data.slice(start, start + perPage), total: data.length, page, perPage, totalPages: Math.ceil(data.length / perPage) };
-}
-
-function renderPagination(containerId, pagination, onPageChange) {
-    const { page, totalPages, total, perPage } = pagination;
-    const start = (page - 1) * perPage + 1;
-    const end = Math.min(page * perPage, total);
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    let pages = '';
-    const maxPages = 5;
-    let startPage = Math.max(1, page - 2);
-    let endPage = Math.min(totalPages, startPage + maxPages - 1);
-    if (endPage - startPage < maxPages - 1) startPage = Math.max(1, endPage - maxPages + 1);
-
-    for (let i = startPage; i <= endPage; i++) {
-        pages += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="${onPageChange}(${i})">${i}</button>`;
-    }
-
-    container.innerHTML = `
-    <div class="pagination">
-      <span class="pagination-info">Showing ${start}–${end} of ${total} records</span>
-      <div class="pagination-controls">
-        <button class="page-btn" onclick="${onPageChange}(${page - 1})" ${page === 1 ? 'disabled' : ''}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="15 18 9 12 15 6"/></svg>
-        </button>
-        ${pages}
-        <button class="page-btn" onclick="${onPageChange}(${page + 1})" ${page === totalPages ? 'disabled' : ''}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="9 18 15 12 9 6"/></svg>
-        </button>
+// ── BU Selector Modal ────────────────────────────────────────
+function showBUSelector() {
+    const html = `
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:380px">
+      <div class="modal-header">
+        <div class="modal-title">Select Business Unit</div>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
       </div>
-    </div>`;
+      <div style="padding:16px;display:flex;flex-direction:column;gap:8px">
+        <button onclick="setBU(null)" style="text-align:left;padding:12px 14px;border-radius:10px;border:2px solid ${!APP_STATE.currentBU ? 'var(--primary)' : 'var(--border)'};background:${!APP_STATE.currentBU ? 'var(--primary-light)' : 'var(--bg-elevated)'};cursor:pointer;font-weight:600;color:var(--text-primary);font-family:var(--font-main);font-size:13px">
+          🏢 All Business Units
+        </button>
+        ${DB.businessUnits.map(bu => `
+          <button onclick="setBU('${bu.id}')" style="text-align:left;padding:12px 14px;border-radius:10px;border:2px solid ${APP_STATE.currentBU === bu.id ? 'var(--primary)' : 'var(--border)'};background:${APP_STATE.currentBU === bu.id ? 'var(--primary-light)' : 'var(--bg-elevated)'};cursor:pointer;font-weight:600;color:var(--text-primary);font-family:var(--font-main);font-size:13px">
+            ${bu.name} <span style="font-size:11px;color:var(--text-muted);font-weight:400">(${bu.code})</span>
+          </button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+    openModal(html);
 }
 
-// ── Sort Table ──
-function sortData(data, key, dir = 'asc') {
-    return [...data].sort((a, b) => {
-        const av = a[key] ?? ''; const bv = b[key] ?? '';
-        if (typeof av === 'number') return dir === 'asc' ? av - bv : bv - av;
-        return dir === 'asc' ? av.toString().localeCompare(bv.toString()) : bv.toString().localeCompare(av.toString());
-    });
+function setBU(buId) {
+    APP_STATE.currentBU = buId;
+    const label = buId ? (DB.businessUnits.find(b => b.id === buId)?.name || 'All') : 'All Business Units';
+    const el = document.getElementById('bu-selector-label');
+    if (el) el.textContent = label;
+    closeModal();
+    showToast(`Viewing: ${label}`, 'info');
+    if (ROUTER && ROUTER.currentPage) navigateTo(ROUTER.currentPage, ROUTER.currentParams);
 }
 
-// ── Bar Chart ──
-function renderBarChart(containerId, labels, values, color = 'blue') {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const max = Math.max(...values, 1);
-    const bars = labels.map((label, i) => {
-        const pct = Math.round((values[i] / max) * 100);
-        return `<div class="bar-col">
-      <div class="bar-value">${values[i]}</div>
-      <div class="bar-fill ${color}" style="height:${pct}%"></div>
-      <div class="bar-label">${label}</div>
-    </div>`;
-    }).join('');
-    container.innerHTML = `<div class="bar-chart">${bars}</div>`;
+// ── Pagination Helper ────────────────────────────────────────
+function paginate(items, page, perPage = 10) {
+    const total = items.length;
+    const totalPages = Math.ceil(total / perPage);
+    const start = (page - 1) * perPage;
+    const end = start + perPage;
+    return {
+        items: items.slice(start, end),
+        total, totalPages, page,
+        start: start + 1, end: Math.min(end, total)
+    };
 }
 
-// ── Initials ──
-function getInitials(name) {
-    return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+function renderPagination(pg, onNavigate) {
+    if (pg.totalPages <= 1) return '';
+    const pages = [];
+    for (let i = 1; i <= pg.totalPages; i++) {
+        if (i === 1 || i === pg.totalPages || (i >= pg.page - 1 && i <= pg.page + 1)) {
+            pages.push(`<button class="page-btn ${i === pg.page ? 'active' : ''}" onclick="${onNavigate}(${i})">${i}</button>`);
+        } else if (pages[pages.length - 1] !== '<span style="padding:0 4px;color:var(--text-muted)">…</span>') {
+            pages.push('<span style="padding:0 4px;color:var(--text-muted)">…</span>');
+        }
+    }
+    return `<div class="pagination">
+    <div class="pagination-info">Showing ${pg.start}–${pg.end} of ${pg.total}</div>
+    <div class="pagination-controls">
+      <button class="page-btn" onclick="${onNavigate}(${pg.page - 1})" ${pg.page === 1 ? 'disabled' : ''}>‹</button>
+      ${pages.join('')}
+      <button class="page-btn" onclick="${onNavigate}(${pg.page + 1})" ${pg.page === pg.totalPages ? 'disabled' : ''}>›</button>
+    </div>
+  </div>`;
 }
 
-// ── Contractor Filter ──
-function filterContractors(contractors, { search = '', status = '', risk = '', bu = '' } = {}) {
-    return contractors.filter(c => {
-        if (search && !c.name.toLowerCase().includes(search.toLowerCase()) && !c.contact.toLowerCase().includes(search.toLowerCase())) return false;
-        if (status && c.status !== status) return false;
-        if (risk && c.riskLevel !== risk) return false;
-        if (bu && bu !== 'all' && c.buId !== bu) return false;
-        return true;
-    });
+// ── Export to CSV (mock) ─────────────────────────────────────
+function exportToCSV(filename) {
+    showToast(`Exporting ${filename}.csv…`, 'success');
 }
 
-// ── Scope Filter based on role ──
-function scopeContractors(contractors, role, buId) {
-    if (role === 'enterprise-hse' || role === 'procurement') return contractors;
-    if (role === 'bu-hse') return contractors.filter(c => c.buId === buId);
-    if (role === 'project-hse') return contractors.filter(c => c.buId === buId);
-    if (role === 'contractor-admin') return contractors.filter(c => c.id === 'c-001'); // demo: own contractor
-    if (role === 'site-supervisor') return contractors.filter(c => c.buId === buId);
-    return contractors;
+// ── Escalation Check ─────────────────────────────────────────
+function checkEscalation(contractor) {
+    if (!contractor) return false;
+    const overdueRatio = contractor.overdueActions / Math.max(contractor.openActions, 1);
+    const highOverdue = overdueRatio >= 0.2 || contractor.overdueActions >= 4;
+    const highIncidents = contractor.incidents90d >= 3;
+    const lowCompliance = contractor.compliancePercent < 80;
+    return highOverdue || highIncidents || lowCompliance;
+}
+
+// ── Risk Score Color ──────────────────────────────────────────
+function riskScoreColor(score) {
+    if (score >= 80) return '#DC2626';
+    if (score >= 60) return '#EA580C';
+    if (score >= 40) return '#D97706';
+    return '#059669';
+}
+
+// ── Contractor Filter (shared) ────────────────────────────────
+function filterContractors(search = '', status = 'all', risk = 'all') {
+    let list = [...DB.contractors];
+    if (APP_STATE.currentBU) list = list.filter(c => c.buId === APP_STATE.currentBU);
+    if (search) {
+        const q = search.toLowerCase();
+        list = list.filter(c => c.name.toLowerCase().includes(q) || c.contact.toLowerCase().includes(q));
+    }
+    if (status !== 'all') list = list.filter(c => c.status.toLowerCase() === status);
+    if (risk !== 'all') list = list.filter(c => c.riskLevel.toLowerCase() === risk);
+    return list;
 }

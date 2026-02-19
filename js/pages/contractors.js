@@ -1,145 +1,247 @@
 /* ============================================================
-   contractors.js — Contractor List Page
+   HSW Digital — Contractors Page
+   contractors.js — Full enterprise contractor list with filter/sort/export
    ============================================================ */
 
-let _contractorPage = 1;
-let _contractorSort = { key: 'name', dir: 'asc' };
-let _contractorFilters = { search: '', status: '', risk: '', bu: '' };
+let _contractorsState = {
+  search: '',
+  status: 'all',
+  risk: 'all',
+  page: 1,
+  perPage: 8,
+  sort: 'riskScore',
+  sortDir: 'desc'
+};
 
-function renderContractors() {
-  const container = document.getElementById('page-container');
+window.renderContractors = function () {
+  const c = document.getElementById('page-container');
+  c.innerHTML = buildContractorsHTML();
+};
+
+window.initContractors = function () {
+  const input = document.getElementById('contractors-search');
+  if (input) input.addEventListener('input', e => {
+    _contractorsState.search = e.target.value;
+    _contractorsState.page = 1;
+    refreshContractors();
+  });
+};
+
+function buildContractorsHTML() {
   const role = APP_STATE.currentRole;
-  const canAdd = ['enterprise-hse', 'bu-hse', 'project-hse', 'procurement'].includes(role);
-
-  container.innerHTML = `
-    <div class="page">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Contractors</div>
-          <div class="page-subtitle">Manage and monitor all registered contractors</div>
-        </div>
-        <div class="page-actions">
-          ${canAdd ? `<button class="btn btn-primary" onclick="navigateTo('onboarding')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Register Contractor
-          </button>` : ''}
-          <button class="btn btn-secondary" onclick="exportContractors()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Export
-          </button>
-        </div>
+  const canApprove = ['enterprise-hse', 'bu-hse', 'project-hse'].includes(role);
+  return `
+  <div class="page" style="padding-bottom:0">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Contractors</div>
+        <div class="page-subtitle">Manage and monitor contractor risk profiles across all business units</div>
       </div>
+      <div class="page-actions">
+        <button class="btn btn-secondary" onclick="exportToCSV('contractors')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export</button>
+        ${canApprove ? `<button class="btn btn-primary" onclick="navigateTo('onboarding')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Contractor</button>` : ''}
+      </div>
+    </div>
 
-      <div class="card">
-        <div class="table-toolbar">
-          <div class="search-input-wrap">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="text" class="search-input" placeholder="Search contractors..." id="contractor-search" oninput="contractorSearch(this.value)" value="${_contractorFilters.search}">
+    <!-- Summary Cards Row -->
+    <div class="grid grid-4" style="margin-bottom:16px">
+      ${[
+      { label: 'Total Contractors', val: DB.contractors.length, color: 'var(--primary)', bg: 'var(--primary-light)' },
+      { label: 'Approved', val: DB.contractors.filter(c => c.status === 'Approved').length, color: 'var(--success)', bg: 'var(--success-bg)' },
+      { label: 'High / Critical', val: DB.contractors.filter(c => ['High', 'Critical'].includes(c.riskLevel)).length, color: 'var(--danger)', bg: 'var(--danger-bg)' },
+      { label: 'Require Action', val: DB.contractors.filter(c => c.overdueActions > 0 || c.status === 'Suspended').length, color: 'var(--warning)', bg: 'var(--warning-bg)' }
+    ].map(s => `
+        <div class="card" style="padding:16px;display:flex;align-items:center;gap:14px">
+          <div style="width:42px;height:42px;border-radius:10px;background:${s.bg};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <div style="font-size:20px;font-weight:900;color:${s.color}">${s.val}</div>
           </div>
-          <select class="filter-select" onchange="contractorFilter('status', this.value)" id="status-filter">
-            <option value="">All Statuses</option>
-            <option ${_contractorFilters.status === 'Approved' ? 'selected' : ''}>Approved</option>
-            <option ${_contractorFilters.status === 'Under Review' ? 'selected' : ''}>Under Review</option>
-            <option ${_contractorFilters.status === 'Draft' ? 'selected' : ''}>Draft</option>
-            <option ${_contractorFilters.status === 'Suspended' ? 'selected' : ''}>Suspended</option>
-            <option ${_contractorFilters.status === 'Rejected' ? 'selected' : ''}>Rejected</option>
-          </select>
-          <select class="filter-select" onchange="contractorFilter('risk', this.value)" id="risk-filter">
-            <option value="">All Risk Levels</option>
-            <option ${_contractorFilters.risk === 'Low' ? 'selected' : ''}>Low</option>
-            <option ${_contractorFilters.risk === 'Medium' ? 'selected' : ''}>Medium</option>
-            <option ${_contractorFilters.risk === 'High' ? 'selected' : ''}>High</option>
-            <option ${_contractorFilters.risk === 'Critical' ? 'selected' : ''}>Critical</option>
-          </select>
-          <select class="filter-select" onchange="contractorFilter('bu', this.value)" id="bu-filter">
-            <option value="">All Projects</option>
-            ${DB.businessUnits.map(b => `<option value="${b.id}" ${_contractorFilters.bu === b.id ? 'selected' : ''}>${b.name}</option>`).join('')}
-          </select>
-        </div>
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted)">${s.label}</div>
+        </div>`).join('')}
+    </div>
 
-        <div class="table-wrap">
-          <table class="data-table" id="contractors-table">
-            <thead>
-              <tr>
-                <th onclick="contractorSort('name')">Company <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('status')">Status <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('riskLevel')">Risk Level <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('riskScore')">Risk Score <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('compliancePercent')">Compliance <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('workerCount')">Workers <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('incidents')">Incidents <span class="sort-icon">↕</span></th>
-                <th onclick="contractorSort('overdueActions')">Overdue Actions <span class="sort-icon">↕</span></th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="contractors-tbody"></tbody>
-          </table>
+    <!-- Table Card -->
+    <div class="card">
+
+      <!-- Toolbar -->
+      <div class="table-toolbar">
+        <div class="table-toolbar-start">
+          <div class="search-bar" style="width:260px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="contractors-search" placeholder="Search contractors…" value="${_contractorsState.search}">
+          </div>
         </div>
-        <div id="contractors-pagination"></div>
+        <div class="table-toolbar-end">
+          <span class="table-count" id="contractor-count">Loading…</span>
+        </div>
       </div>
+
+      <!-- Filter Chips -->
+      <div class="filters-bar">
+        <span style="font-size:12px;font-weight:600;color:var(--text-muted);margin-right:4px">Status:</span>
+        ${['all', 'Approved', 'Under Review', 'Draft', 'Suspended'].map(s => `
+          <div class="filter-chip ${_contractorsState.status === s.toLowerCase() || (_contractorsState.status === 'all' && s === 'all') ? 'active' : ''}"
+            onclick="setContractorFilter('status','${s.toLowerCase()}')">
+            ${s === 'all' ? 'All' : s}
+          </div>`).join('')}
+        <div class="topbar-divider" style="margin:0 6px"></div>
+        <span style="font-size:12px;font-weight:600;color:var(--text-muted);margin-right:4px">Risk:</span>
+        ${['all', 'Low', 'Medium', 'High', 'Critical'].map(r => `
+          <div class="filter-chip ${_contractorsState.risk === r.toLowerCase() ? 'active' : ''}"
+            onclick="setContractorFilter('risk','${r.toLowerCase()}')">
+            ${r === 'all' ? 'All' : r}
+          </div>`).join('')}
+      </div>
+
+      <!-- Table -->
+      <div class="table-container" id="contractors-table-body">
+        ${buildContractorsTable()}
+      </div>
+
+    </div>
+  </div>`;
+}
+
+function buildContractorsTable() {
+  let list = [...DB.contractors];
+
+  // Filter
+  if (APP_STATE.currentBU) list = list.filter(c => c.buId === APP_STATE.currentBU);
+  if (_contractorsState.search) {
+    const q = _contractorsState.search.toLowerCase();
+    list = list.filter(c => c.name.toLowerCase().includes(q) || c.contact.toLowerCase().includes(q) || c.scopeOfWork.some(s => s.toLowerCase().includes(q)));
+  }
+  if (_contractorsState.status !== 'all') list = list.filter(c => c.status.toLowerCase() === _contractorsState.status);
+  if (_contractorsState.risk !== 'all') list = list.filter(c => c.riskLevel.toLowerCase() === _contractorsState.risk);
+
+  // Sort
+  list.sort((a, b) => {
+    let va = a[_contractorsState.sort] ?? 0;
+    let vb = b[_contractorsState.sort] ?? 0;
+    if (typeof va === 'string') va = va.toLowerCase(), vb = vb.toLowerCase();
+    if (va < vb) return _contractorsState.sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return _contractorsState.sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Update count
+  setTimeout(() => {
+    const el = document.getElementById('contractor-count');
+    if (el) el.textContent = `${list.length} contractor${list.length !== 1 ? 's' : ''}`;
+  }, 0);
+
+  // Paginate
+  const pg = paginate(list, _contractorsState.page, _contractorsState.perPage);
+
+  if (pg.items.length === 0) return `
+    <div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+      <div class="empty-title">No contractors found</div>
+      <div class="empty-body">Try adjusting your search or filters</div>
     </div>`;
 
-  renderContractorsTable();
+  const cols = [
+    { key: 'name', label: 'Contractor' },
+    { key: 'status', label: 'Status' },
+    { key: 'riskLevel', label: 'Risk Level' },
+    { key: 'compliancePercent', label: 'Compliance' },
+    { key: 'ifr', label: 'IFR' },
+    { key: 'overdueActions', label: 'Overdue' },
+    { key: 'workerCount', label: 'Workers' },
+    { key: 'reviewDue', label: 'Review Due' },
+    { key: '-', label: 'Actions' }
+  ];
+
+  return `
+  <table class="data-table">
+    <thead><tr>
+      ${cols.map(col => col.key !== '-' ? `
+      <th onclick="sortContractors('${col.key}')" class="${_contractorsState.sort === col.key ? 'sort-active' : ''}">
+        ${col.label} <span class="sort-icon">${_contractorsState.sort === col.key ? (_contractorsState.sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
+      </th>` : `<th>${col.label}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      ${pg.items.map(c => {
+    const overduePct = c.openActions > 0 ? Math.round(c.overdueActions / c.openActions * 100) : 0;
+    const hasEsc = DB.escalationLog.find(e => e.contractorId === c.id && e.status === 'Open');
+    const bu = DB.businessUnits.find(b => b.id === c.buId);
+    const days = daysUntil(c.reviewDue);
+    return `<tr onclick="navigateTo('contractor-profile',{id:'${c.id}'})" style="cursor:pointer">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="user-avatar" style="background:${riskScoreColor(c.riskScore || 0)};width:34px;height:34px;font-size:10px">
+                ${c.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
+              </div>
+              <div>
+                <div style="font-weight:700;color:var(--text-primary);font-size:13px">${c.name}</div>
+                <div style="font-size:11px;color:var(--text-muted)">${bu ? bu.name : ''} · ${c.projects.length} project${c.projects.length !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+            ${hasEsc ? '<div style="margin-top:4px;margin-left:44px"><span class="badge badge-critical" style="font-size:10px">⚠ Escalated</span></div>' : ''}
+          </td>
+          <td><span class="badge ${getStatusBadge(c.status)}">${c.status}</span></td>
+          <td><span class="risk-badge ${getRiskBadge(c.riskLevel)}">${c.riskLevel}</span></td>
+          <td>
+            <div class="compliance-bar" style="gap:6px">
+              <div class="progress-bar-wrap" style="width:54px"><div class="progress-bar-fill ${getProgressClass(c.compliancePercent)}" style="width:${c.compliancePercent}%"></div></div>
+              <span style="font-size:12px;font-weight:700;color:${getComplianceClass(c.compliancePercent) === 'good' ? 'var(--success)' : getComplianceClass(c.compliancePercent) === 'ok' ? 'var(--warning)' : 'var(--danger)'}">${c.compliancePercent}%</span>
+            </div>
+          </td>
+          <td><span style="font-weight:700;color:${c.ifr >= 5 ? 'var(--danger)' : c.ifr >= 2 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</span></td>
+          <td>
+            ${c.overdueActions > 0
+        ? `<span class="badge badge-critical">${c.overdueActions} overdue</span>`
+        : `<span style="color:var(--text-muted);font-size:12px">—</span>`}
+          </td>
+          <td>
+            <div style="font-size:13px;font-weight:600">${c.activeWorkers}/${c.workerCount}</div>
+            <div style="font-size:10px;color:var(--text-muted)">active</div>
+          </td>
+          <td>
+            ${c.reviewDue
+        ? `<div style="font-size:12px;font-weight:600;color:${days !== null && days < 30 ? 'var(--danger)' : 'var(--text-primary)'}">${fmtDate(c.reviewDue)}</div>
+                 ${days !== null && days < 30 ? `<div style="font-size:10px;color:var(--danger);font-weight:600">${days}d left</div>` : ''}`
+        : '<span style="color:var(--text-muted);font-size:12px">—</span>'}
+          </td>
+          <td onclick="event.stopPropagation()" style="white-space:nowrap">
+            <button class="btn btn-sm btn-secondary" onclick="navigateTo('contractor-profile',{id:'${c.id}'})">View</button>
+          </td>
+        </tr>`;
+  }).join('')}
+    </tbody>
+  </table>
+  ${renderPagination(pg, 'gotoContractorPage')}`;
 }
 
-function renderContractorsTable() {
-  const role = APP_STATE.currentRole;
-  let contractors = scopeContractors(DB.contractors, role, APP_STATE.currentBU);
-  contractors = filterContractors(contractors, _contractorFilters);
-  contractors = sortData(contractors, _contractorSort.key, _contractorSort.dir);
+function refreshContractors() {
+  const body = document.getElementById('contractors-table-body');
+  if (body) body.innerHTML = buildContractorsTable();
+}
 
-  const pg = paginate(contractors, _contractorPage, 8);
-  const tbody = document.getElementById('contractors-tbody');
-  if (!tbody) return;
+function setContractorFilter(key, val) {
+  _contractorsState[key] = val;
+  _contractorsState.page = 1;
+  // Refresh page to update chip state
+  window.renderContractors();
+  window.initContractors();
+}
 
-  if (pg.items.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state">
-      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
-      <div class="empty-title">No contractors found</div>
-      <div class="empty-text">Try adjusting your search or filters</div>
-    </div></td></tr>`;
+function sortContractors(key) {
+  if (_contractorsState.sort === key) {
+    _contractorsState.sortDir = _contractorsState.sortDir === 'asc' ? 'desc' : 'asc';
   } else {
-    tbody.innerHTML = pg.items.map(c => {
-      const escalation = checkEscalation(c);
-      return `<tr onclick="navigateTo('contractor-profile', {id:'${c.id}'})">
-        <td>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="contractor-initials" style="width:36px;height:36px;border-radius:8px;font-size:13px">${getInitials(c.name)}</div>
-            <div>
-              <div class="col-name">${c.name}</div>
-              <div class="col-muted">${c.regNum}</div>
-            </div>
-          </div>
-        </td>
-        <td>${statusBadge(c.status)}</td>
-        <td>${riskBadge(c.riskLevel)}</td>
-        <td><span style="font-weight:800;color:${getRiskColor(c.riskLevel)}">${c.riskScore}</span></td>
-        <td>${complianceBadge(c.compliancePercent)}</td>
-        <td>${c.workerCount}</td>
-        <td><span style="color:${c.incidents > 5 ? 'var(--color-noncompliant)' : c.incidents > 2 ? 'var(--color-expiring)' : 'var(--text-primary)'};font-weight:600">${c.incidents}</span></td>
-        <td><span style="color:${c.overdueActions > 0 ? 'var(--color-noncompliant)' : 'var(--text-primary)'};font-weight:600">${c.overdueActions}</span></td>
-        <td onclick="event.stopPropagation()">
-            <div style="display:flex;gap:4px">
-                ${c.riskLevel !== 'Low' ? '<span class="badge badge-escalation" style="font-size:9px">⚡ Escalate</span>' : ''}
-                <button class="btn btn-ghost btn-sm" onclick="navigateTo('contractor-profile', {id:'${c.id}'})">View</button>
-            </div>
-        </td>
-      </tr>`;
-    }).join('');
+    _contractorsState.sort = key;
+    _contractorsState.sortDir = 'desc';
   }
-
-  renderPagination('contractors-pagination', pg, 'contractorPage');
+  refreshContractors();
 }
 
-function contractorSearch(val) { _contractorFilters.search = val; _contractorPage = 1; renderContractorsTable(); }
-function contractorFilter(key, val) { _contractorFilters[key] = val; _contractorPage = 1; renderContractorsTable(); }
-function contractorSort(key) {
-  if (_contractorSort.key === key) _contractorSort.dir = _contractorSort.dir === 'asc' ? 'desc' : 'asc';
-  else { _contractorSort.key = key; _contractorSort.dir = 'asc'; }
-  renderContractorsTable();
-}
-function contractorPage(p) { _contractorPage = p; renderContractorsTable(); }
-function exportContractors() {
-  const data = DB.contractors.map(c => ({ Name: c.name, Registration: c.regNum, Status: c.status, Risk: c.riskLevel, Score: c.riskScore, Compliance: c.compliancePercent + '%', Workers: c.workerCount, Incidents: c.incidents }));
-  exportCSV(data, 'contractors_export');
+function gotoContractorPage(p) {
+  _contractorsState.page = p;
+  refreshContractors();
+  document.querySelector('.main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
 }

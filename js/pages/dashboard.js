@@ -1,314 +1,483 @@
 /* ============================================================
-   dashboard.js — Enterprise Governance Dashboard
+   HSW Digital — Enterprise Dashboard
+   dashboard.js — Role-aware KPI + Benchmarking + Escalations
    ============================================================ */
 
-let _dashTimeFilter = 'monthly';
-
-function renderDashboard() {
+window.renderDashboard = function () {
   const role = APP_STATE.currentRole;
   const kpi = DB.enterpriseKPIs;
-  const roleData = DB.roles[role];
-  const contractors = scopeContractors(DB.contractors, role, APP_STATE.currentBU);
-  const topRisk = [...contractors].sort((a, b) => b.riskScore - a.riskScore).slice(0, 8);
+  const tf = APP_TIME_FILTER;
+  const trend = DB.performanceTrend[tf];
+
+  const isEnterprise = role === 'enterprise-hse';
+  const isBUAbove = ['enterprise-hse', 'bu-hse'].includes(role);
+  const isContractorAdmin = role === 'contractor-admin';
 
   const container = document.getElementById('page-container');
+
+  // Escalation banner
+  const openEscalations = DB.escalationLog.filter(e => e.status === 'Open');
+
   container.innerHTML = `
-    <div class="page">
-      <!-- Page Header -->
-      <div class="page-header">
-        <div>
-          <div class="page-title">Enterprise Dashboard</div>
-          <div class="page-subtitle">Contractor Risk Governance — Real-time Command Centre</div>
+  <div class="page">
+
+    <!-- Page Header -->
+    <div class="page-header">
+      <div class="page-title-area">
+        <div class="page-title">
+          ${isEnterprise ? '🏢 Enterprise' : isBUAbove ? '📊 Business Unit' : '📋'} Dashboard
         </div>
-        <div class="page-actions">
-          <span id="demo-role-badge" style="
-            padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
-            background:${roleData.color}22;color:${roleData.color};cursor:pointer;
-            border:1px solid ${roleData.color}44" onclick="showRoleSwitcher()">
-            ${roleData.title}
-          </span>
-          <button class="btn btn-secondary btn-sm" onclick="showRoleSwitcher()">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-            Switch Role (Demo)
-          </button>
-          <div style="display:flex;gap:4px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:3px">
-            <button class="btn btn-sm ${_dashTimeFilter === 'weekly' ? 'btn-primary' : 'btn-ghost'}" onclick="setDashFilter('weekly')">Weekly</button>
-            <button class="btn btn-sm ${_dashTimeFilter === 'monthly' ? 'btn-primary' : 'btn-ghost'}" onclick="setDashFilter('monthly')">Monthly</button>
+        <div class="page-subtitle">${isEnterprise ? 'Real-time contractor risk command centre across all assets' : 'Contractor performance overview for your scope'}</div>
+      </div>
+      <div class="page-actions">
+        ${isEnterprise ? `<button class="btn btn-secondary" onclick="exportToCSV('enterprise-kpi-report')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Report</button>` : ''}
+        <button class="btn btn-primary" onclick="navigateTo('contractors')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          All Contractors</button>
+      </div>
+    </div>
+
+    <!-- Escalation Banner -->
+    ${openEscalations.length > 0 && isBUAbove ? `
+    <div class="escalation-banner" style="margin-bottom:20px">
+      <div class="escalation-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:14px;height:14px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+        ${openEscalations.length} Escalation${openEscalations.length > 1 ? 's' : ''} Open
+      </div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:#991B1B">Enterprise Reviews Required</div>
+        <div style="font-size:12px;color:#B91C1C;margin-top:2px">${openEscalations.map(e => e.contractor).join(' · ')}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="navigateTo('compliance-alerts')">View Escalations</button>
+    </div>` : ''}
+
+    <!-- KPI Cards Row -->
+    <div class="grid grid-4" style="margin-bottom:20px">
+
+      <div class="kpi-card trend-down" onclick="navigateTo('contractors')">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Active Contractors</div>
+            <div class="kpi-value">${kpi.activeContractors}</div>
           </div>
+          <div class="kpi-icon-wrap" style="background:var(--primary-light)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
+          <span>+${kpi.activeContractorsPct}%</span>
+          <span class="kpi-change">vs last period</span>
         </div>
       </div>
 
-      <!-- ── KPI Cards Row ── -->
-      <div class="no-contractor-admin">
-        <div class="kpi-grid-7" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px">
-          ${kpiCard('Total Contractors', kpi.totalContractors, trendArrowGoodUp('up', kpi.totalContractorsPct), '#3B82F6', '🏢', 'navigateTo("contractors")')}
-          ${kpiCard('Enterprise IFR', kpi.ifr.toFixed(1), trendArrow('up', kpi.ifrPct), '#EF4444', '📊', 'navigateTo("performance")', 'vs industry 3.8')}
-          ${kpiCard('High Risk Contractors', kpi.highRisk, trendArrow('up', kpi.highRiskPct), '#F97316', '⚠️', 'navigateTo("contractors")')}
-          ${kpiCard('Overdue Actions %', kpi.overdueActionsPct + '%', trendArrow('up', kpi.overdueActionsPctChange), '#DC2626', '🔴', 'navigateTo("contractors")')}
-          ${kpiCard('Workforce Compliance', kpi.workforceCompliance + '%', trendArrowGoodUp('down', Math.abs(kpi.workforceCompliancePct)), '#10B981', '👷', 'navigateTo("workforce")')}
-          ${kpiCard('Open Audit Findings', kpi.openAudits, trendArrow('up', kpi.openAuditsPct), '#8B5CF6', '🔍', 'navigateTo("compliance-alerts")')}
-          ${kpiCard('Risk Exposure Score', kpi.riskExposureScore, trendArrow('up', kpi.riskExposurePct), '#F59E0B', '🎯', 'navigateTo("reports")', 'out of 100')}
+      <div class="kpi-card trend-up" onclick="navigateTo('performance')">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Incident Freq. Rate</div>
+            <div class="kpi-value">${kpi.ifr}</div>
+          </div>
+          <div class="kpi-icon-wrap" style="background:var(--danger-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span>+${kpi.ifrPct}%</span>
+          <span class="kpi-change">↑ Requires attention</span>
         </div>
       </div>
 
-      <!-- ── Top row: Ranking + Escalations ── -->
-      <div style="display:grid;grid-template-columns:1fr 380px;gap:20px;margin-bottom:20px" class="bu-and-above">
-        <!-- Contractor Risk Ranking -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Contractor Risk Ranking</div>
-              <div class="card-subtitle">Sortable by all metrics · Click row to view profile</div>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="navigateTo('contractors')">View All →</button>
+      <div class="kpi-card trend-up" onclick="showHighRiskContractors()">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">High Risk Contractors</div>
+            <div class="kpi-value">${kpi.highRisk}</div>
           </div>
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead><tr>
-                <th>Rank</th>
-                <th>Contractor</th>
-                <th>IFR</th>
-                <th>Overdue %</th>
-                <th>Compliance</th>
-                <th>Risk Score</th>
-                <th>Escalation</th>
-              </tr></thead>
-              <tbody>
-                ${topRisk.map((c, i) => {
-    const esc = checkEscalation(c);
-    const actions = getActionsByContractor(c.id);
-    const overduePct = actions.length > 0 ? Math.round(actions.filter(a => a.status === 'Overdue').length / actions.length * 100) : 0;
-    const rankColors = ['#F59E0B', '#94A3B8', '#CD7F32'];
-    const rankStyle = i < 3 ? `background:${rankColors[i]};color:#fff` : 'background:var(--bg-elevated);color:var(--text-muted)';
+          <div class="kpi-icon-wrap" style="background:var(--orange-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#EA580C" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span>+${kpi.highRiskPct}%</span>
+          <span class="kpi-change">High + Critical</span>
+        </div>
+      </div>
+
+      <div class="kpi-card trend-up" onclick="navigateTo('compliance-alerts')">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Overdue Actions %</div>
+            <div class="kpi-value">${kpi.overdueActionsPct}%</div>
+          </div>
+          <div class="kpi-icon-wrap" style="background:var(--danger-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span>+${kpi.overdueActionsPctChange}pp</span>
+          <span class="kpi-change">Action required</span>
+        </div>
+      </div>
+
+      <div class="kpi-card trend-up">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Workforce Compliance</div>
+            <div class="kpi-value">${kpi.workforceCompliance}%</div>
+          </div>
+          <div class="kpi-icon-wrap" style="background:var(--warning-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span>${kpi.workforceCompliancePct}%</span>
+          <span class="kpi-change">${kpi.compliantWorkers}/${kpi.totalWorkers} workers</span>
+        </div>
+      </div>
+
+      <div class="kpi-card trend-up no-contractor-admin" onclick="navigateTo('compliance-alerts')">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Open Audit Findings</div>
+            <div class="kpi-value">${kpi.openAudits}</div>
+          </div>
+          <div class="kpi-icon-wrap" style="background:var(--warning-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span>+${kpi.openAuditsPct}%</span>
+          <span class="kpi-change">Trending up</span>
+        </div>
+      </div>
+
+      <div class="kpi-card trend-up enterprise-only">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Risk Exposure Score</div>
+            <div class="kpi-value">${kpi.riskExposureScore}</div>
+          </div>
+          <div class="kpi-icon-wrap" style="background:var(--danger-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.375 2.625a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend up">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span>+${kpi.riskExposurePct}%</span>
+          <span class="kpi-change">Enterprise score</span>
+        </div>
+      </div>
+
+      <div class="kpi-card trend-down">
+        <div class="kpi-top">
+          <div>
+            <div class="kpi-label">Fully Compliant</div>
+            <div class="kpi-value">${kpi.fullyCompliant}</div>
+          </div>
+          <div class="kpi-icon-wrap" style="background:var(--success-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </div>
+        </div>
+        <div class="kpi-trend down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
+          <span>${Math.round(kpi.fullyCompliant / kpi.activeContractors * 100)}% of active</span>
+          <span class="kpi-change">tracking well</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+      <!-- Incident Trend Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Incident Trend (${tf === 'monthly' ? '7 Months' : '7 Weeks'})</div>
+            <div class="card-subtitle">Total incidents across all contractors</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge badge-danger">${kpi.totalIncidents} total</span>
+          </div>
+        </div>
+        <div class="card-body">
+          ${renderBarChart(trend.labels, trend.incidents, '#DC2626', 160)}
+        </div>
+      </div>
+
+      <!-- Compliance Trend Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Workforce Compliance Trend</div>
+            <div class="card-subtitle">% compliant workers across portfolio</div>
+          </div>
+          <span class="badge ${kpi.workforceCompliance >= 85 ? 'badge-approved' : 'badge-warning'}">${kpi.workforceCompliance}%</span>
+        </div>
+        <div class="card-body">
+          ${renderBarChart(trend.labels, trend.compliance, '#2563EB', 160)}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Benchmarking + Risk Quadrant -->
+    <div class="grid" style="grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px" id="benchmark-section">
+
+      <!-- Contractor Ranking Table -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏆 Contractor Performance Ranking</div>
+            <div class="card-subtitle">Sortable by all metrics. Click contractor to drill down.</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="exportToCSV('contractor-ranking')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export</button>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead><tr>
+              <th>Contractor</th>
+              <th>IFR</th>
+              <th>Overdue %</th>
+              <th>Compliance</th>
+              <th>Risk Score</th>
+              <th>Escalation</th>
+            </tr></thead>
+            <tbody>
+              ${DB.contractors.filter(c => c.riskScore !== undefined).sort((a, b) => b.riskScore - a.riskScore).map(c => {
+    const overduePct = c.openActions > 0 ? Math.round(c.overdueActions / c.openActions * 100) : 0;
+    const hasEsc = DB.escalationLog.find(e => e.contractorId === c.id && e.status === 'Open');
     return `<tr onclick="navigateTo('contractor-profile',{id:'${c.id}'})" style="cursor:pointer">
-                      <td><div style="width:24px;height:24px;border-radius:50%;${rankStyle};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800">${i + 1}</div></td>
-                      <td>
-                        <div style="display:flex;align-items:center;gap:8px">
-                          <div class="contractor-initials" style="width:30px;height:30px;border-radius:6px;font-size:11px">${getInitials(c.name)}</div>
-                          <div>
-                            <div class="col-name" style="font-size:13px">${c.name}</div>
-                            <div class="col-muted">${c.riskLevel} Risk</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><span style="font-weight:700;color:${c.ifr > 5 ? 'var(--color-noncompliant)' : c.ifr > 2 ? 'var(--color-expiring)' : 'var(--color-compliant)'}">${c.ifr}</span> ${ifrTrendBadge(c.ifrTrend)}</td>
-                      <td><span style="font-weight:700;color:${overduePct > 20 ? 'var(--color-noncompliant)' : 'var(--text-primary)'}">${overduePct}%</span></td>
-                      <td>${complianceBadge(c.compliancePercent)}</td>
-                      <td><span style="font-weight:800;color:${getRiskColor(c.riskLevel)};font-size:16px">${c.riskScore}</span></td>
-                      <td>${c.riskLevel !== 'Low' ? '<span class="badge badge-noncompliant" style="font-size:10px;animation:pulse 2s infinite">⚡ Escalate</span>' : '<span class="badge badge-compliant" style="font-size:10px">✓ OK</span>'}</td>
-                    </tr>`;
+                  <td>
+                    <div style="font-weight:600;color:var(--text-primary)">${c.name}</div>
+                    <div class="text-xs text-muted">${c.projects.length} project(s)</div>
+                  </td>
+                  <td>
+                    <div style="font-weight:700;color:${c.ifr >= 5 ? 'var(--danger)' : c.ifr >= 2 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight:700;color:${overduePct >= 30 ? 'var(--danger)' : overduePct >= 15 ? 'var(--warning)' : 'var(--success)'}">${overduePct}%</div>
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <div class="progress-bar-wrap" style="width:50px"><div class="progress-bar-fill ${getProgressClass(c.compliancePercent)}" style="width:${c.compliancePercent}%"></div></div>
+                      <span class="text-sm font-bold ${getComplianceClass(c.compliancePercent) === 'good' ? 'text-success' : getComplianceClass(c.compliancePercent) === 'ok' ? 'text-warning' : 'text-danger'}">${c.compliancePercent}%</span>
+                    </div>
+                  </td>
+                  <td><span class="risk-badge ${getRiskBadge(c.riskLevel)}">${c.riskScore || '—'}</span></td>
+                  <td>${hasEsc ? '<span class="badge badge-critical badge-dot">Escalated</span>' : '<span class="badge badge-draft">—</span>'}</td>
+                </tr>`;
   }).join('')}
-              </tbody>
-            </table>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Risk Quadrant -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⚡ Risk Quadrant Analysis</div>
+            <div class="card-subtitle">IFR vs Corrective Action Closure Speed</div>
           </div>
         </div>
+        <div class="card-body" style="padding:16px">
+          <div style="position:relative;background:var(--bg-elevated);border-radius:12px;border:1px solid var(--border);overflow:hidden">
+            <!-- Quadrant grid -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;height:280px">
+              <div style="background:rgba(234,88,12,0.06);border-right:1px dashed var(--border);border-bottom:1px dashed var(--border);padding:8px;display:flex;align-items:flex-start;justify-content:flex-start">
+                <div style="font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px">⚠ High IFR / Slow Closure</div>
+              </div>
+              <div style="background:rgba(220,38,38,0.06);border-bottom:1px dashed var(--border);padding:8px;display:flex;align-items:flex-start;justify-content:flex-end">
+                <div style="font-size:9px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px">🔴 Critical / Poor Control</div>
+              </div>
+              <div style="background:rgba(37,99,235,0.04);border-right:1px dashed var(--border);padding:8px;display:flex;align-items:flex-end;justify-content:flex-start">
+                <div style="font-size:9px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px">✅ High Performing</div>
+              </div>
+              <div style="background:rgba(16,185,129,0.04);padding:8px;display:flex;align-items:flex-end;justify-content:flex-end">
+                <div style="font-size:9px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.5px">📈 Low IFR / Fast Closure</div>
+              </div>
+            </div>
 
-        <!-- Escalation Panel -->
-        <div class="card enterprise-only">
-          <div class="card-header">
-            <div class="card-title">🚨 Open Escalations</div>
-            <span class="badge badge-noncompliant">${DB.escalationLog.filter(e => e.status === 'Open').length} Open</span>
+            <!-- Dots -->
+            <div style="position:absolute;inset:0;pointer-events:none">
+              ${DB.contractors.filter(c => c.ifr !== undefined && c.closureSpeed !== undefined).map(c => {
+    const maxIfr = 15, maxSpeed = 50;
+    const x = Math.min((c.ifr / maxIfr) * 100, 98);
+    const y = Math.min((1 - c.closureSpeed / maxSpeed) * 100, 98);
+    const color = c.riskLevel === 'Critical' ? '#DC2626' : c.riskLevel === 'High' ? '#EA580C' : c.riskLevel === 'Medium' ? '#D97706' : '#059669';
+    const initials = c.name.split(' ').map(w => w[0]).join('').slice(0, 2);
+    return `<div style="position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:white;cursor:pointer;pointer-events:all;z-index:10" onclick="navigateTo('contractor-profile',{id:'${c.id}'})" title="${c.name} — IFR: ${c.ifr}, Closure: ${c.closureSpeed}d">${initials}</div>`;
+  }).join('')}
+            </div>
+
+            <!-- Axis Labels -->
+            <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:10px;color:var(--text-muted);font-weight:600">IFR (Incident Frequency Rate) →</div>
+            <div style="position:absolute;left:6px;top:50%;transform:translateY(-50%) rotate(-90deg);font-size:10px;color:var(--text-muted);font-weight:600;white-space:nowrap">Closure Speed →</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:4px">
-            ${DB.escalationLog.map(e => `
-              <div style="border:1.5px solid ${e.status === 'Open' ? 'var(--color-noncompliant)' : 'var(--border)'};
-                border-radius:10px;padding:12px;background:${e.status === 'Open' ? 'rgba(220,38,38,0.05)' : 'var(--bg-elevated)'}">
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-                  <div style="font-weight:700;font-size:13px;color:var(--text-primary)">${e.contractor}</div>
-                  <span class="badge ${e.status === 'Open' ? 'badge-noncompliant' : 'badge-compliant'}" style="font-size:10px;white-space:nowrap">${e.status}</span>
+
+          <!-- Legend -->
+          <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap">
+            ${['Critical', 'High', 'Medium', 'Low'].map(l => {
+    const colors = { Critical: '#DC2626', High: '#EA580C', Medium: '#D97706', Low: '#059669' };
+    return `<div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted)">
+                <div style="width:10px;height:10px;border-radius:50%;background:${colors[l]}"></div>${l} Risk
+              </div>`;
+  }).join('')}
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Project + BU Benchmarking -->
+    <div class="grid grid-2" style="gap:16px;margin-bottom:20px" id="bu-benchmark">
+
+      <!-- Project Benchmark Bar Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📊 Incident Rate by Project</div>
+            <div class="card-subtitle">Click bar to drill into project contractor list</div>
+          </div>
+        </div>
+        <div class="card-body" style="padding:16px">
+          ${(() => {
+      const projects = DB.projectBenchmarks;
+      const maxIfr = Math.max(...projects.map(p => p.ifr), 1);
+      return `<div style="display:flex;flex-direction:column;gap:8px">
+              ${projects.map(p => `
+                <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="navigateTo('contractors')">
+                  <div style="width:80px;font-size:11px;font-weight:600;color:var(--text-muted);text-align:right;flex-shrink:0">${p.name}</div>
+                  <div style="flex:1;background:var(--bg-elevated);border-radius:4px;height:20px;overflow:hidden">
+                    <div style="height:100%;width:${(p.ifr / maxIfr * 100)}%;background:${p.ifr >= 5 ? 'var(--danger)' : p.ifr >= 2 ? 'var(--warning)' : 'var(--success)'};border-radius:4px;display:flex;align-items:center;padding:0 6px;transition:width 0.8s ease">
+                      <span style="font-size:10px;font-weight:700;color:white">${p.ifr}</span>
+                    </div>
+                  </div>
+                  <div style="font-size:11px;color:var(--text-muted);width:24px">${p.incidents}i</div>
+                </div>`).join('')}
+            </div>`;
+    })()}
+        </div>
+      </div>
+
+      <!-- BU Compliance Chart -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏢 Compliance % by Business Unit</div>
+            <div class="card-subtitle">Aggregated contractor compliance score</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:16px">
+            ${DB.buBenchmarks.map(bu => `
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <div style="font-size:13px;font-weight:600;color:var(--text-primary)">${bu.name}</div>
+                  <div style="font-size:13px;font-weight:800;color:${getComplianceClass(bu.compliance) === 'good' ? 'var(--success)' : getComplianceClass(bu.compliance) === 'ok' ? 'var(--warning)' : 'var(--danger)'}">${bu.compliance}%</div>
                 </div>
-                <div style="font-size:11px;color:var(--text-muted);margin:4px 0">${e.trigger}</div>
-                <div style="font-size:10px;color:var(--text-muted)">${e.date}</div>
-                ${e.status === 'Open' ? `
-                  <div style="display:flex;gap:6px;margin-top:8px">
-                    <button class="btn btn-sm btn-primary" style="font-size:10px;padding:4px 8px"
-                      onclick="event.stopPropagation();promptEscalationReview('${e.contractorId}')">Mark Reviewed</button>
-                    <button class="btn btn-sm btn-ghost" style="font-size:10px;padding:4px 8px"
-                      onclick="navigateTo('contractor-profile',{id:'${e.contractorId}'})">View Profile</button>
-                  </div>` : `<div style="font-size:11px;color:var(--text-muted);margin-top:6px">Reviewed by ${e.reviewedBy} · ${e.reviewDate}</div>`}
+                <div class="progress-bar-wrap"><div class="progress-bar-fill ${getProgressClass(bu.compliance)}" style="width:${bu.compliance}%"></div></div>
+                <div style="display:flex;justify-content:space-between;margin-top:4px">
+                  <span style="font-size:11px;color:var(--text-muted)">${bu.contractors} contractors · ${bu.incidents} incidents</span>
+                  <span class="badge ${bu.compliance >= 80 ? 'badge-approved' : 'badge-warning'}" style="font-size:10px">IFR ${bu.ifr}</span>
+                </div>
               </div>`).join('')}
           </div>
         </div>
       </div>
 
-      <!-- ── Cross-Asset Benchmarking ── -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px" class="bu-and-above">
-        <!-- IFR by Project -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">📊 IFR by Project</div>
-            <div class="card-subtitle">Industry benchmark: 3.8</div>
-          </div>
-          <div style="padding:0 4px 16px">
-            ${DB.projectBenchmarks.map(p => {
-    const pct = Math.min((p.ifr / 16) * 100, 100);
-    const color = p.ifr > 7 ? 'var(--color-noncompliant)' : p.ifr > 3.8 ? 'var(--color-expiring)' : 'var(--color-compliant)';
-    return `<div style="margin-bottom:10px">
-                  <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-                    <span style="font-size:12px;font-weight:600;color:var(--text-primary)">${p.name}</span>
-                    <span style="font-size:12px;font-weight:800;color:${color}">${p.ifr}</span>
-                  </div>
-                  <div style="height:8px;background:var(--bg-elevated);border-radius:4px;overflow:hidden">
-                    <div style="height:100%;width:${pct}%;background:${color};border-radius:4px;transition:width 0.5s ease"></div>
-                  </div>
-                </div>`;
-  }).join('')}
-            <div style="display:flex;align-items:center;gap:6px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
-              <div style="height:2px;width:30px;background:var(--text-muted);border-style:dashed"></div>
-              <span style="font-size:11px;color:var(--text-muted)">Industry benchmark: 3.8</span>
-            </div>
-          </div>
-        </div>
+    </div>
 
-        <!-- Compliance by BU -->
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">✅ Compliance % by Project</div>
-          </div>
-          <div style="padding:16px 8px;display:flex;align-items:flex-end;gap:24px;justify-content:center;height:180px">
-            ${DB.buBenchmarks.map(bu => {
-    const color = bu.compliance >= 85 ? 'var(--color-compliant)' : bu.compliance >= 70 ? 'var(--color-expiring)' : 'var(--color-noncompliant)';
-    return `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">
-                  <div style="font-weight:800;font-size:14px;color:${color}">${bu.compliance}%</div>
-                  <div style="width:100%;background:${color};border-radius:6px 6px 0 0;height:${bu.compliance}px;max-height:130px;transition:height 0.5s ease"></div>
-                  <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-align:center">${bu.name}</div>
-                  <div style="font-size:10px;color:var(--text-muted)">${bu.contractors} contractors</div>
-                </div>`;
-  }).join('')}
-          </div>
+    <!-- Recent Escalations -->
+    ${isBUAbove ? `
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🚨 Escalation Log</div>
+          <div class="card-subtitle">Enterprise reviews and intervention history</div>
         </div>
+        <span class="badge badge-critical">${openEscalations.length} Open</span>
       </div>
-
-      <!-- ── Risk Quadrant ── -->
-      <div class="card enterprise-only" style="margin-bottom:20px">
-        <div class="card-header">
-          <div>
-            <div class="card-title">🎯 Risk Quadrant — IFR vs Corrective Action Closure Speed</div>
-            <div class="card-subtitle">X-axis: Incident Frequency Rate · Y-axis: Closure Speed (days) · Bubble = Risk Score</div>
-          </div>
-        </div>
-        <div style="position:relative;height:320px;margin:16px 16px 40px;border-left:2px solid var(--border);border-bottom:2px solid var(--border)">
-          <!-- Quadrant Labels -->
-          <div style="position:absolute;top:4px;right:4px;font-size:10px;font-weight:700;color:var(--color-noncompliant);opacity:0.6">HIGH RISK / POOR CONTROL ▼</div>
-          <div style="position:absolute;top:4px;left:4px;font-size:10px;font-weight:700;color:var(--color-expiring);opacity:0.6">▼ DETERIORATING</div>
-          <div style="position:absolute;bottom:28px;left:4px;font-size:10px;font-weight:700;color:var(--color-compliant);opacity:0.6">▲ HIGH PERFORMING</div>
-          <div style="position:absolute;bottom:28px;right:4px;font-size:10px;font-weight:700;color:var(--color-expiring);opacity:0.6">IMPROVING ▲</div>
-          <!-- Divider lines -->
-          <div style="position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border);opacity:0.5"></div>
-          <div style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--border);opacity:0.5"></div>
-
-          <!-- Plot contractors (exclude Draft/BlueWave with no data) -->
-          ${contractors.filter(c => c.ifr !== undefined && c.closureSpeed !== undefined && c.workerCount > 0).map(c => {
-    // X = IFR (0-16 maps to 0-100%), Y = closureSpeed (0-50 maps to 100-0%)
-    const x = Math.min((c.ifr / 14) * 100, 95);
-    const y = Math.max(100 - Math.min((c.closureSpeed / 45) * 100, 95), 5);
-    const size = Math.max(28, Math.min(c.riskScore / 3, 48));
-    const color = getRiskColor(c.riskLevel);
-    return `<div style="
-                position:absolute;
-                left:${x}%;top:${y}%;
-                width:${size}px;height:${size}px;
-                transform:translate(-50%,-50%);
-                background:${color}cc;border:2px solid ${color};
-                border-radius:50%;cursor:pointer;
-                display:flex;align-items:center;justify-content:center;
-                font-size:9px;font-weight:800;color:#fff;
-                transition:transform 0.2s;z-index:2"
-                title="${c.name} | IFR: ${c.ifr} | Closure: ${c.closureSpeed}d | Score: ${c.riskScore}"
-                onclick="navigateTo('contractor-profile',{id:'${c.id}'})"
-                onmouseover="this.style.transform='translate(-50%,-50%) scale(1.3)'"
-                onmouseout="this.style.transform='translate(-50%,-50%) scale(1)'"
-              >${getInitials(c.name)}</div>`;
-  }).join('')}
-
-          <!-- Axis Labels -->
-          <div style="position:absolute;bottom:-28px;left:0;right:0;text-align:center;font-size:11px;color:var(--text-muted);font-weight:600">Incident Frequency Rate (IFR) →</div>
-          <div style="position:absolute;top:50%;left:-52px;transform:translateY(-50%) rotate(-90deg);font-size:11px;color:var(--text-muted);font-weight:600;white-space:nowrap">← Closure Speed (days)</div>
-        </div>
-        <!-- Legend -->
-        <div style="display:flex;gap:16px;flex-wrap:wrap;padding:0 16px 16px">
-          ${['Low', 'Medium', 'High', 'Critical'].map(l => `
-            <div style="display:flex;align-items:center;gap:6px">
-              <div style="width:12px;height:12px;border-radius:50%;background:${getRiskColor(l)}"></div>
-              <span style="font-size:11px;color:var(--text-muted)">${l} Risk</span>
-            </div>`).join('')}
-          <span style="font-size:11px;color:var(--text-muted);margin-left:8px">· Bubble size = Risk Score · Click to open profile</span>
-        </div>
+      <div class="table-container">
+        <table class="data-table">
+          <thead><tr>
+            <th>Contractor</th>
+            <th>Date</th>
+            <th>Trigger</th>
+            <th>Status</th>
+            <th>Reviewed By</th>
+            <th>Action</th>
+          </tr></thead>
+          <tbody>
+            ${DB.escalationLog.map(e => `
+              <tr>
+                <td><span style="font-weight:600;cursor:pointer;color:var(--primary)" onclick="navigateTo('contractor-profile',{id:'${e.contractorId}'})">${e.contractor}</span></td>
+                <td>${fmtDate(e.date)}</td>
+                <td style="max-width:200px"><div style="font-size:12px;color:var(--text-muted)">${e.trigger}</div></td>
+                <td><span class="badge ${e.status === 'Open' ? 'badge-critical' : 'badge-approved'}">${e.status}</span></td>
+                <td>${e.reviewedBy ? e.reviewedBy : '<span style="color:var(--text-muted);font-size:12px">—</span>'}</td>
+                <td>
+                  ${e.status === 'Open' ? `<button class="btn btn-sm btn-secondary" onclick="markEscalationReviewed('${e.id}')">Mark Reviewed</button>` : `<span style="font-size:12px;color:var(--text-muted)">${fmtDate(e.reviewDate)}</span>`}
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
       </div>
+    </div>` : ''}
 
-      <!-- ── Incident Trend ── -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px" class="no-contractor-admin">
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">📈 Enterprise Incident Trend</div>
-          </div>
-          <div id="incident-chart" style="height:160px;padding:0 8px 8px"></div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <div class="card-title">📋 Compliance Trend</div>
-          </div>
-          <div id="compliance-chart" style="height:160px;padding:0 8px 8px"></div>
-        </div>
-      </div>
-    </div>`;
+  </div>`;
 
-  // Render bar charts
-  const trend = DB.performanceTrend[_dashTimeFilter];
-  renderBarChart('incident-chart', trend.labels, trend.incidents, 'red');
-  renderBarChart('compliance-chart', trend.labels, trend.compliance, 'blue');
+  // Apply role visibility
+  applyRolePermissions(role);
+};
 
-  // Apply role permissions
-  applyRolePermissions(APP_STATE.currentRole);
-}
-
-function kpiCard(title, value, trendHtml, color, icon, clickFn, sub = '') {
-  return `
-    <div class="kpi-card" onclick="${clickFn}" style="cursor:pointer;position:relative;overflow:hidden;border-top:3px solid ${color}">
-      <div style="position:absolute;top:-10px;right:-10px;font-size:48px;opacity:0.08">${icon}</div>
-      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">${title}</div>
-      <div style="font-size:28px;font-weight:900;color:var(--text-primary);line-height:1;margin-bottom:6px">${value}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>${trendHtml} <span style="font-size:10px;color:var(--text-muted)">vs last period</span></div>
-        ${sub ? `<div style="font-size:10px;color:var(--text-muted)">${sub}</div>` : ''}
-      </div>
-    </div>`;
-}
-
-function setDashFilter(filter) {
-  _dashTimeFilter = filter;
-  renderDashboard();
-}
-
-function promptEscalationReview(contractorId) {
-  const role = APP_STATE.currentRole;
-  const roleData = DB.roles[role];
+function showHighRiskContractors() {
+  const high = DB.contractors.filter(c => ['High', 'Critical'].includes(c.riskLevel));
   const html = `
-    <div class="modal-overlay" onclick="closeModal()">
-      <div class="modal-box" onclick="event.stopPropagation()" style="max-width:400px">
-        <div class="modal-header">
-          <div class="modal-title">Mark Escalation Reviewed</div>
-          <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
-        </div>
-        <div style="padding:20px;display:flex;flex-direction:column;gap:14px">
-          <div style="font-size:13px;color:var(--text-secondary)">Add intervention notes before marking as reviewed:</div>
-          <textarea id="esc-notes" rows="4" class="form-input"
-            placeholder="e.g. Monthly audit scheduled. Contractor issued formal warning. Follow-up due 28 Feb 2026..."
-            style="resize:vertical"></textarea>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-primary" style="flex:1" onclick="
-              const notes = document.getElementById('esc-notes').value;
-              if(!notes.trim()){showToast('Please add intervention notes','warning');return;}
-              markEscalationReviewed('${contractorId}','${roleData.name}',notes);
-              closeModal();
-              showToast('Escalation marked as reviewed','success');
-              renderDashboard();">
-              Confirm Review
-            </button>
-            <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-          </div>
-        </div>
+  <div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-box" onclick="event.stopPropagation()" style="max-width:500px">
+      <div class="modal-header">
+        <div class="modal-title">⚠ High Risk Contractors (${high.length})</div>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">✕</button>
       </div>
-    </div>`;
+      <div style="padding:0">
+        ${high.map(c => `
+          <div class="notif-item" onclick="closeModal();navigateTo('contractor-profile',{id:'${c.id}'})" style="cursor:pointer">
+            <div class="notif-dot" style="background:${c.riskLevel === 'Critical' ? 'var(--danger)' : 'var(--orange)'}"></div>
+            <div class="notif-content">
+              <div class="notif-title">${c.name}</div>
+              <div class="notif-body">IFR: ${c.ifr} · Compliance: ${c.compliancePercent}% · ${c.overdueActions} overdue actions</div>
+            </div>
+            <span class="risk-badge ${getRiskBadge(c.riskLevel)}">${c.riskLevel}</span>
+          </div>`).join('')}
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+        <button class="btn btn-primary" onclick="closeModal();navigateTo('contractors')">View All Contractors</button>
+      </div>
+    </div>
+  </div>`;
   openModal(html);
+}
+
+function markEscalationReviewed(id) {
+  const esc = DB.escalationLog.find(e => e.id === id);
+  if (!esc) return;
+  const role = DB.roles[APP_STATE.currentRole];
+  esc.status = 'Reviewed';
+  esc.reviewedBy = role?.name || 'Current User';
+  esc.reviewDate = new Date().toISOString().split('T')[0];
+  showToast('Escalation marked as reviewed', 'success');
+  window.renderDashboard();
 }

@@ -6,7 +6,7 @@ let _reportType = 'contractor-risk';
 let _reportStatus = 'idle'; // idle | pending | generating | ready
 let _reportTimer = null;
 
-function renderReports() {
+window.renderReports = function () {
   const container = document.getElementById('page-container');
 
   container.innerHTML = `

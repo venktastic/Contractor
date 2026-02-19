@@ -15,7 +15,7 @@ const REQUIRED_DOCS = [
   { id: 'env-plan', name: 'Environmental Management Plan', required: false, hasExpiry: false }
 ];
 
-function renderOnboarding(params = {}) {
+window.renderOnboarding = function (params = {}) {
   const container = document.getElementById('page-container');
   if (params.edit) _onboardingStep = 1;
 

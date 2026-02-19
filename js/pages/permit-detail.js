@@ -2,15 +2,20 @@
 // PERMIT DETAIL PAGE - MODULE C (RAMS)
 // ============================================
 
-function renderPermitDetail() {
+window.renderPermitDetail = function () {
+  const container = document.getElementById('page-container');
   const permit = findPermit(APP_STATE.currentPermitId);
-  if (!permit) return '<div class="empty-state"><p class="empty-title">Permit not found</p></div>';
+
+  if (!permit) {
+    container.innerHTML = '<div class="empty-state"><p class="empty-title">Permit not found</p></div>';
+    return;
+  }
 
   const statusClass = getStatusBadgeClass(permit.status);
   const statusLabel = getStatusLabel(permit.status);
   const riskClass = getRiskBadgeClass(permit.riskLevel);
 
-  return `
+  container.innerHTML = `
     <div>
       <!-- Hero -->
       <div class="permit-detail-hero">

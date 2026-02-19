@@ -21,46 +21,45 @@ function navigateTo(page, params = {}) {
     // Render page
     const container = document.getElementById('page-container');
 
-    // Clear previous content
-    container.innerHTML = '';
-
-    // Rendering logic based on page
-    let content = '';
+    // Clear previous content (optional, but good for safety)
+    // container.innerHTML = ''; 
 
     try {
         switch (page) {
             case 'dashboard':
-                content = renderDashboard();
+                if (window.renderDashboard) window.renderDashboard();
                 break;
             case 'contractors':
-                content = renderContractors();
+                if (window.renderContractors) window.renderContractors();
                 break;
             case 'contractor-profile':
-                content = renderContractorProfile(params.id);
+                if (window.renderContractorProfile) window.renderContractorProfile(params.id);
                 break;
             case 'onboarding':
-                content = renderOnboarding();
+                if (window.renderOnboarding) window.renderOnboarding(params);
+                break;
+            case 'active-permit':
+                // Ensure renderPermitDetail is available or handle gracefully
+                if (window.renderPermitDetail) window.renderPermitDetail(params.id);
                 break;
             case 'workforce':
-                content = renderWorkforce();
+                if (window.renderWorkforce) window.renderWorkforce();
                 break;
             case 'performance':
-                content = renderPerformance();
+                if (window.renderPerformance) window.renderPerformance();
                 break;
             case 'compliance-alerts':
-                content = renderComplianceAlerts();
+                if (window.renderComplianceAlerts) window.renderComplianceAlerts();
                 break;
             case 'reports':
-                content = renderReports();
+                if (window.renderReports) window.renderReports();
                 break;
             case 'settings':
-                content = renderSettings();
+                if (window.renderSettings) window.renderSettings();
                 break;
             default:
-                content = renderDashboard(); // Default to dashboard
+                if (window.renderDashboard) window.renderDashboard();
         }
-
-        container.innerHTML = content;
 
         // Post-render init (charts, etc.)
         if (page === 'dashboard' && window.initDashboard) window.initDashboard();
