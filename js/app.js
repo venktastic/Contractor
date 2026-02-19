@@ -151,5 +151,6 @@ function initApp() {
 
 // ── Init ──
 window.addEventListener('DOMContentLoaded', () => {
+    // Show splash screen, then load app();
     initApp();
 });

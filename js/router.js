@@ -63,7 +63,11 @@ function renderPage(page) {
         'qr-view': renderQrView,
         'approver-inbox': renderApproverInbox,
         'watcher-dashboard': renderWatcherDashboard,
-        'active-permit': renderPermitDetail // Reusing detail view for now
+        'active-permit': renderPermitDetail, // Reusing detail view for now
+        'workforce': renderWorkforce,
+        'performance': renderPerformance,
+        'compliance-alerts': renderComplianceAlerts,
+        'settings': renderSettings
     };
 
     const renderer = pages[page];
