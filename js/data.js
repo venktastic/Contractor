@@ -1,527 +1,317 @@
-/* ============================================
-   SAFEWORK PTW - DATA & STATE MANAGEMENT
-   Mock Data & LocalStorage Simulation
-   ============================================ */
+/* ============================================================
+   HSW Digital — Contractor Management Portal
+   data.js — Mock Data Store
+   ============================================================ */
 
-const APP_STATE = {
-  user: {
-    id: 'user_001',
-    name: 'Prakash Senghani',
-    role: 'REQUESTER', // Options: REQUESTER, APPROVER, WATCHER, ADMIN
-    avatar: 'PS'
-  },
-  currentPermit: null,
-  wizard: {
-    currentStep: 1,
-    totalSteps: 7, // Updated to 7 steps
-    data: {
-      // Camera First Data
-      capturedImage: null,
-      imageTimestamp: null,
+const DB = {
 
-      // AI Analysis Data
-      aiAnalysis: {
-        detectedType: null,
-        confidence: 0,
-        detectedRisks: [],
-        suggestedControls: []
-      },
-
-      // Standard Data
-      description: '',
-      location: '',
-      zone: '',
-      permitType: null, // Confirmed type
-      startTime: '',
-      endTime: '',
-      rams: null,
-      competentPerson: null, // Watcher
-      simopsConflicts: []
-    }
-  },
-  notifications: [
-    { id: 1, text: "Permit PTW-2026-0142 approved", time: "2 mins ago", read: false },
-    { id: 2, text: "SIMOPS Alert in Zone C", time: "1 hour ago", read: false },
-    { id: 3, text: "Watcher check-in overdue", time: "3 hours ago", read: true }
-  ],
-  pageHistory: [] // Track navigation history
-};
-
-// Mock AI Analysis Data
-const MOCK_AI_DATA = {
-  default: {
-    type: 'General Work',
-    confidence: 85,
-    risks: ['Slips/Trips', 'Manual Handling'],
-    controls: ['Housekeeping', 'Gloves']
-  },
-  welding: {
-    type: 'Hot Work',
-    confidence: 94,
-    risks: ['Fire Hazard', 'Fumes', 'UV Radiation'],
-    controls: ['Fire Extinguisher', 'Welding Screen', 'Ventilation']
-  },
-  height: {
-    type: 'Work at Height',
-    confidence: 91,
-    risks: ['Fall from Height', 'Falling Objects'],
-    controls: ['Harness', 'Barriers', 'Tool Tethers']
-  },
-  confined: {
-    type: 'Confined Space',
-    confidence: 88,
-    risks: ['Gas Accumulation', 'Low Oxygen', 'Entrapment'],
-    controls: ['Gas Monitor', 'Tripod/Winch', 'Standby Man']
-  }
-};
-
-// Updated Users with Roles
-const USERS = [
-  { id: 'user_001', name: 'Prakash Senghani', role: 'REQUESTER', avatar: 'PS' },
-  { id: 'user_002', name: 'Mike Thompson', role: 'APPROVER', avatar: 'MT' },
-  { id: 'user_003', name: 'Sarah Connor', role: 'WATCHER', avatar: 'SC' }
-];
-
-const PTW_DATA = {
-  // Current user
-  currentUser: {
-    id: 'USR001',
-    name: 'Prakash Senghani',
-    initials: 'PS',
-    role: 'HSE Manager',
-    permissions: ['create', 'approve', 'reject', 'override', 'admin']
+  roles: {
+    'enterprise-hse': { name: 'Prakash Senghani', initials: 'PS', title: 'Enterprise HSE Director', color: '#3B82F6', scope: 'all' },
+    'bu-hse': { name: 'Marcus Chen', initials: 'MC', title: 'BU HSE Manager', color: '#8B5CF6', scope: 'bu' },
+    'project-hse': { name: 'Sarah Okafor', initials: 'SO', title: 'Project HSE Manager', color: '#10B981', scope: 'project' },
+    'contractor-admin': { name: 'James Patel', initials: 'JP', title: 'Contractor Admin', color: '#F59E0B', scope: 'own' },
+    'site-supervisor': { name: 'Tom Walsh', initials: 'TW', title: 'Site Supervisor', color: '#EF4444', scope: 'project' },
+    'procurement': { name: 'Lisa Nguyen', initials: 'LN', title: 'Procurement Team', color: '#6B7280', scope: 'all' }
   },
 
-  // Permit Types
-  permitTypes: [
-    {
-      id: 'HOT_WORK',
-      name: 'Hot Work',
-      icon: '🔥',
-      color: '#E63946',
-      riskLevel: 'HIGH',
-      description: 'Welding, cutting, grinding operations',
-      checklist: [
-        'Fire extinguisher present and accessible',
-        'Hot work area cleared of flammable materials (10m radius)',
-        'Fire watch assigned and briefed',
-        'Spark containment measures in place',
-        'Adjacent areas notified',
-        'Emergency stop procedures confirmed',
-        'PPE: Face shield, heat-resistant gloves, fire-retardant clothing',
-        'Gas detection equipment calibrated and operational'
-      ]
-    },
-    {
-      id: 'CONFINED_SPACE',
-      name: 'Confined Space',
-      icon: '🚧',
-      color: '#FF6B35',
-      riskLevel: 'CRITICAL',
-      description: 'Entry into confined or enclosed spaces',
-      checklist: [
-        'Atmospheric testing completed (O2, LEL, H2S, CO)',
-        'Ventilation system operational',
-        'Rescue team on standby',
-        'Entry/exit log established',
-        'Communication system tested',
-        'Lockout/Tagout (LOTO) applied',
-        'PPE: SCBA, harness, lifeline',
-        'Buddy system confirmed',
-        'Emergency extraction plan reviewed'
-      ]
-    },
-    {
-      id: 'ELECTRICAL',
-      name: 'Electrical Work',
-      icon: '⚡',
-      color: '#F4A261',
-      riskLevel: 'HIGH',
-      description: 'Live electrical work and isolation',
-      checklist: [
-        'Isolation and LOTO procedure completed',
-        'Voltage testing confirmed dead',
-        'Insulated tools and PPE verified',
-        'Arc flash assessment completed',
-        'Qualified electrician assigned',
-        'Emergency shutdown procedure posted',
-        'PPE: Insulated gloves (rated), arc flash suit',
-        'No unauthorized personnel in exclusion zone'
-      ]
-    },
-    {
-      id: 'WORKING_AT_HEIGHT',
-      name: 'Work at Height',
-      icon: '🏗️',
-      color: '#7B2FBE',
-      riskLevel: 'HIGH',
-      description: 'Work above 1.8m from ground level',
-      checklist: [
-        'Fall arrest system inspected and certified',
-        'Scaffold inspection completed (tag visible)',
-        'Exclusion zone established below work area',
-        'Weather conditions assessed (wind speed < 15m/s)',
-        'Rescue plan for fallen worker in place',
-        'PPE: Full body harness, hard hat, safety boots',
-        'Tool tethering system in use',
-        'Ladder secured and at correct angle'
-      ]
-    },
-    {
-      id: 'EXCAVATION',
-      name: 'Excavation',
-      icon: '⛏️',
-      color: '#2DC653',
-      riskLevel: 'MEDIUM',
-      description: 'Ground breaking and excavation works',
-      checklist: [
-        'Underground services survey completed',
-        'Shoring/battering plan approved',
-        'Spoil heap positioned safely (min 1m from edge)',
-        'Access/egress ladders in place',
-        'Dewatering plan if required',
-        'Adjacent structures assessed',
-        'PPE: Hard hat, high-vis vest, safety boots',
-        'Daily inspection log started'
-      ]
-    },
-    {
-      id: 'CHEMICAL',
-      name: 'Chemical Handling',
-      icon: '☣️',
-      color: '#0077B6',
-      riskLevel: 'CRITICAL',
-      description: 'Hazardous chemical operations',
-      checklist: [
-        'COSHH assessment reviewed and signed',
-        'SDS sheets available at work location',
-        'Spill containment measures in place',
-        'Emergency shower/eyewash accessible',
-        'Waste disposal plan confirmed',
-        'Chemical storage segregation verified',
-        'PPE: Chemical-resistant suit, gloves, goggles, respirator',
-        'Decontamination procedure established'
-      ]
-    }
+  businessUnits: [
+    { id: 'bu-1', name: 'Infrastructure Division', code: 'INFRA' },
+    { id: 'bu-2', name: 'Energy & Resources', code: 'ENRG' },
+    { id: 'bu-3', name: 'Civil Construction', code: 'CIVIL' }
   ],
 
-  // Zones
-  zones: [
-    'Zone A - North Block', 'Zone B - South Block', 'Zone C - East Wing',
-    'Zone D - West Wing', 'Zone E - Basement', 'Zone F - Roof Level',
-    'Zone G - Plant Room', 'Zone H - Loading Bay', 'Zone I - Substation',
-    'Zone J - Perimeter', 'Zone K - Central Core', 'Zone L - Parking'
+  projects: [
+    { id: 'proj-1', buId: 'bu-1', name: 'M7 Motorway Extension', code: 'M7-EXT' },
+    { id: 'proj-2', buId: 'bu-1', name: 'Harbour Bridge Maintenance', code: 'HBM-24' },
+    { id: 'proj-3', buId: 'bu-1', name: 'Western Rail Upgrade', code: 'WRU-25' },
+    { id: 'proj-4', buId: 'bu-2', name: 'Offshore Platform Alpha', code: 'OPA-23' },
+    { id: 'proj-5', buId: 'bu-2', name: 'Solar Farm Narrabri', code: 'SFN-24' },
+    { id: 'proj-6', buId: 'bu-3', name: 'CBD Tower Development', code: 'CBD-T1' },
+    { id: 'proj-7', buId: 'bu-3', name: 'Westfield Expansion', code: 'WFE-25' },
+    { id: 'proj-8', buId: 'bu-3', name: 'Airport Terminal 3', code: 'APT-T3' }
   ],
 
-  // Contractors
   contractors: [
-    'Apex Construction Ltd', 'BuildSafe Engineering', 'ProTech Contractors',
-    'SafeGuard Works', 'Meridian Industrial', 'Vertex Engineering',
-    'CoreBuild Solutions', 'TechSafe Services'
-  ],
-
-  // Supervisors
-  supervisors: [
-    { id: 'SUP001', name: 'Mike Thompson', cert: 'CSCS Gold' },
-    { id: 'SUP002', name: 'Sarah Chen', cert: 'CSCS Black' },
-    { id: 'SUP003', name: 'David Okafor', cert: 'CSCS Gold' },
-    { id: 'SUP004', name: 'Emma Walsh', cert: 'CSCS Platinum' },
-    { id: 'SUP005', name: 'James Patel', cert: 'CSCS Gold' }
-  ],
-
-  // Sample Permits
-  permits: [
     {
-      id: 'PTW-2026-0142',
-      type: 'HOT_WORK',
-      typeName: 'Hot Work',
-      typeIcon: '🔥',
-      title: 'Welding - Structural Steel Frame',
-      status: 'ACTIVE',
-      riskLevel: 'HIGH',
-      location: 'Block C - Level 4',
-      zone: 'Zone C - East Wing',
-      contractor: 'Apex Construction Ltd',
-      supervisor: 'Mike Thompson',
-      competentPerson: 'user_003', // Sarah Connor (Watcher)
-      team: 'Welding Team Alpha (4 persons)',
-      startDate: '2026-02-18',
-      startTime: '08:00',
-      endDate: '2026-02-18',
-      endTime: '17:00',
-      description: 'Structural welding of steel frame connections at Level 4, Block C. Hot work permit required for MIG welding operations.',
-      rams: {
-        status: 'VALIDATED',
-        files: [
-          { name: 'RAMS_HotWork_BlockC_v2.pdf', size: '2.4 MB', type: 'pdf', version: 2, date: '2026-02-17', validated: true, validatedBy: 'Prakash Senghani' }
-        ]
-      },
-      checklist: [true, true, true, true, true, false, true, true],
-      simopsConflicts: [],
-      approvedBy: 'Prakash Senghani',
-      approvedAt: '2026-02-18T07:45:00',
-      createdAt: '2026-02-17T14:30:00',
-      createdBy: 'Mike Thompson',
-      auditLog: [
-        { action: 'Permit Created', user: 'Mike Thompson', time: '2026-02-17T14:30:00', type: 'create' },
-        { action: 'RAMS Uploaded', user: 'Mike Thompson', time: '2026-02-17T15:00:00', type: 'upload', detail: 'RAMS_HotWork_BlockC_v2.pdf' },
-        { action: 'Submitted for Review', user: 'Mike Thompson', time: '2026-02-17T15:15:00', type: 'submit' },
-        { action: 'RAMS Validated', user: 'Prakash Senghani', time: '2026-02-17T16:00:00', type: 'validate' },
-        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-18T07:45:00', type: 'approve' },
-        { action: 'Permit Activated', user: 'System', time: '2026-02-18T08:00:00', type: 'activate' }
+      id: 'c-001', name: 'Apex Civil Engineering', regNum: 'ABN 45 123 456 789',
+      buId: 'bu-1', projects: ['proj-1', 'proj-3'],
+      scopeOfWork: ['Earthworks', 'Concrete Structures', 'Road Construction'],
+      contact: 'David Morrison', email: 'd.morrison@apexcivil.com.au', phone: '+61 2 9876 5432',
+      status: 'Approved', riskLevel: 'Medium', riskScore: 52,
+      compliancePercent: 88, workerCount: 47, activeWorkers: 42,
+      incidents: 3, openActions: 2, overdueActions: 0,
+      incidents90d: 1, closureSpeed: 8, ifrTrend: 'down',
+      ifr: 2.1, auditFindings: 4, predictiveRisk: 'Stable',
+      aiSummary: 'Minor upward trend in near-miss events. Compliance improving over last 60 days. No escalation trigger.',
+      trendData: { incidents: [3, 2, 4, 3, 2, 3, 1], compliance: [82, 84, 85, 87, 86, 88, 88], actions: [5, 4, 4, 3, 3, 2, 2] },
+      approvedDate: '2025-08-15', reviewDue: '2026-08-15',
+      documents: [
+        { id: 'd-1', name: 'HSW Policy', status: 'Approved', expiry: '2026-06-30', version: 'v3.2', uploadDate: '2025-08-10' },
+        { id: 'd-2', name: 'Risk Assessment Plan', status: 'Approved', expiry: '2026-03-31', version: 'v2.1', uploadDate: '2025-08-10' },
+        { id: 'd-3', name: 'Public Liability Insurance', status: 'Approved', expiry: '2026-02-28', version: 'v1.0', uploadDate: '2025-08-10' },
+        { id: 'd-4', name: 'Workers Compensation', status: 'Expiring', expiry: '2026-03-15', version: 'v1.0', uploadDate: '2025-08-10' },
+        { id: 'd-5', name: 'Trade Licenses', status: 'Approved', expiry: '2027-01-01', version: 'v1.0', uploadDate: '2025-08-10' }
+      ],
+      approvalHistory: [
+        { date: '2025-08-15', action: 'Approved', user: 'Marcus Chen', comment: 'All documents verified. Risk profile acceptable.' },
+        { date: '2025-08-12', action: 'Under Review', user: 'Sarah Okafor', comment: 'Requested updated insurance certificate.' },
+        { date: '2025-08-08', action: 'Submitted', user: 'David Morrison', comment: 'Initial submission for M7 project.' }
       ]
     },
     {
-      id: 'PTW-2026-0141',
-      type: 'CONFINED_SPACE',
-      typeName: 'Confined Space',
-      typeIcon: '🚧',
-      title: 'Inspection - Underground Drainage',
-      status: 'UNDER_REVIEW',
-      riskLevel: 'CRITICAL',
-      location: 'Zone E - Basement',
-      zone: 'Zone E - Basement',
-      contractor: 'SafeGuard Works',
-      supervisor: 'Sarah Chen',
-      team: 'Inspection Team B (3 persons)',
-      startDate: '2026-02-19',
-      startTime: '09:00',
-      endDate: '2026-02-19',
-      endTime: '14:00',
-      description: 'CCTV inspection of underground drainage system in basement level. Confined space entry required.',
-      rams: {
-        status: 'PENDING',
-        files: [
-          { name: 'RAMS_ConfinedSpace_v1.pdf', size: '1.8 MB', type: 'pdf', version: 1, date: '2026-02-18', validated: false }
-        ]
-      },
-      checklist: [true, true, true, false, true, true, true, false, false],
-      simopsConflicts: ['PTW-2026-0143'],
-      approvedBy: null,
-      createdAt: '2026-02-18T09:00:00',
-      createdBy: 'Sarah Chen',
-      auditLog: [
-        { action: 'Permit Created', user: 'Sarah Chen', time: '2026-02-18T09:00:00', type: 'create' },
-        { action: 'RAMS Uploaded', user: 'Sarah Chen', time: '2026-02-18T09:30:00', type: 'upload', detail: 'RAMS_ConfinedSpace_v1.pdf' },
-        { action: 'Submitted for Review', user: 'Sarah Chen', time: '2026-02-18T09:45:00', type: 'submit' },
-        { action: 'SIMOPS Conflict Detected', user: 'System', time: '2026-02-18T09:46:00', type: 'conflict', detail: 'Conflict with PTW-2026-0143 in Zone E' }
+      id: 'c-002', name: 'SafeGuard Electrical', regNum: 'ABN 67 234 567 890',
+      buId: 'bu-1', projects: ['proj-2'],
+      scopeOfWork: ['Electrical Installation', 'HV Systems', 'Testing & Commissioning'],
+      contact: 'Rachel Kim', email: 'r.kim@safeguard-elec.com.au', phone: '+61 2 8765 4321',
+      status: 'Approved', riskLevel: 'High', riskScore: 71,
+      compliancePercent: 72, workerCount: 23, activeWorkers: 20,
+      incidents: 6, openActions: 5, overdueActions: 2,
+      incidents90d: 3, closureSpeed: 18, ifrTrend: 'up',
+      ifr: 5.8, auditFindings: 8, predictiveRisk: 'Deteriorating',
+      aiSummary: 'Contractor showing 32% increase in minor incidents vs last quarter. Corrective action closure rate is below benchmark. Escalation monitoring recommended.',
+      trendData: { incidents: [4, 5, 4, 6, 7, 6, 6], compliance: [80, 78, 75, 74, 72, 71, 72], actions: [3, 4, 5, 5, 6, 5, 5] },
+      approvedDate: '2025-07-01', reviewDue: '2026-01-01',
+      documents: [
+        { id: 'd-6', name: 'HSW Policy', status: 'Approved', expiry: '2026-07-01', version: 'v2.0', uploadDate: '2025-06-28' },
+        { id: 'd-7', name: 'Risk Assessment Plan', status: 'Expiring', expiry: '2026-03-01', version: 'v1.5', uploadDate: '2025-06-28' },
+        { id: 'd-8', name: 'Public Liability Insurance', status: 'Approved', expiry: '2026-07-01', version: 'v1.0', uploadDate: '2025-06-28' },
+        { id: 'd-9', name: 'Electrical Contractor License', status: 'Approved', expiry: '2027-06-30', version: 'v1.0', uploadDate: '2025-06-28' }
+      ],
+      approvalHistory: [
+        { date: '2025-07-01', action: 'Approved', user: 'Marcus Chen', comment: 'Enhanced approval due to high risk profile. Additional monitoring required.' },
+        { date: '2025-06-28', action: 'Under Review', user: 'Marcus Chen', comment: 'High risk contractor — escalated to BU HSE for review.' },
+        { date: '2025-06-25', action: 'Submitted', user: 'Rachel Kim', comment: 'Submission for Harbour Bridge project.' }
       ]
     },
     {
-      id: 'PTW-2026-0143',
-      type: 'ELECTRICAL',
-      typeName: 'Electrical Work',
-      typeIcon: '⚡',
-      title: 'Substation Maintenance - Panel B',
-      status: 'APPROVED',
-      riskLevel: 'HIGH',
-      location: 'Zone E - Basement Substation',
-      zone: 'Zone E - Basement',
-      contractor: 'ProTech Contractors',
-      supervisor: 'David Okafor',
-      team: 'Electrical Team (2 persons)',
-      startDate: '2026-02-19',
-      startTime: '08:00',
-      endDate: '2026-02-19',
-      endTime: '16:00',
-      description: 'Planned maintenance of Panel B in basement substation. Isolation and LOTO required.',
-      rams: {
-        status: 'VALIDATED',
-        files: [
-          { name: 'RAMS_Electrical_SubB_v3.pdf', size: '3.1 MB', type: 'pdf', version: 3, date: '2026-02-17', validated: true, validatedBy: 'Prakash Senghani' }
-        ]
-      },
-      checklist: [true, true, true, true, true, true, true, true],
-      simopsConflicts: ['PTW-2026-0141'],
-      approvedBy: 'Prakash Senghani',
-      approvedAt: '2026-02-18T08:30:00',
-      createdAt: '2026-02-17T10:00:00',
-      createdBy: 'David Okafor',
-      auditLog: [
-        { action: 'Permit Created', user: 'David Okafor', time: '2026-02-17T10:00:00', type: 'create' },
-        { action: 'RAMS Uploaded (v3)', user: 'David Okafor', time: '2026-02-17T10:30:00', type: 'upload' },
-        { action: 'Submitted for Review', user: 'David Okafor', time: '2026-02-17T11:00:00', type: 'submit' },
-        { action: 'RAMS Validated', user: 'Prakash Senghani', time: '2026-02-17T14:00:00', type: 'validate' },
-        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-18T08:30:00', type: 'approve' }
+      id: 'c-003', name: 'TerraForm Landscaping', regNum: 'ABN 89 345 678 901',
+      buId: 'bu-3', projects: ['proj-6', 'proj-7'],
+      scopeOfWork: ['Landscaping', 'Irrigation', 'Soft Landscaping'],
+      contact: 'Ben Nguyen', email: 'b.nguyen@terraform.com.au', phone: '+61 3 9876 1234',
+      status: 'Approved', riskLevel: 'Low', riskScore: 18,
+      compliancePercent: 97, workerCount: 12, activeWorkers: 12,
+      incidents: 0, openActions: 0, overdueActions: 0,
+      incidents90d: 0, closureSpeed: 3, ifrTrend: 'stable',
+      ifr: 0.0, auditFindings: 1, predictiveRisk: 'High Performing',
+      aiSummary: 'Exemplary HSE performance. Zero incidents in 12 months. Compliance consistently above 95%. Recommended as benchmark reference.',
+      trendData: { incidents: [0, 0, 0, 0, 0, 0, 0], compliance: [95, 96, 96, 97, 97, 97, 97], actions: [1, 1, 0, 1, 0, 0, 0] },
+      approvedDate: '2025-09-01', reviewDue: '2026-09-01',
+      documents: [
+        { id: 'd-10', name: 'HSW Policy', status: 'Approved', expiry: '2026-09-01', version: 'v1.0', uploadDate: '2025-08-28' },
+        { id: 'd-11', name: 'Risk Assessment Plan', status: 'Approved', expiry: '2026-09-01', version: 'v1.0', uploadDate: '2025-08-28' },
+        { id: 'd-12', name: 'Public Liability Insurance', status: 'Approved', expiry: '2026-09-01', version: 'v1.0', uploadDate: '2025-08-28' }
+      ],
+      approvalHistory: [
+        { date: '2025-09-01', action: 'Approved', user: 'Sarah Okafor', comment: 'Clean record. Low risk profile.' },
+        { date: '2025-08-30', action: 'Submitted', user: 'Ben Nguyen', comment: 'Submission for CBD Tower project.' }
       ]
     },
     {
-      id: 'PTW-2026-0140',
-      type: 'WORKING_AT_HEIGHT',
-      typeName: 'Work at Height',
-      typeIcon: '🏗️',
-      title: 'Facade Inspection - North Elevation',
-      status: 'EXPIRED',
-      riskLevel: 'HIGH',
-      location: 'Zone A - North Block',
-      zone: 'Zone A - North Block',
-      contractor: 'BuildSafe Engineering',
-      supervisor: 'Emma Walsh',
-      team: 'Inspection Team A (2 persons)',
-      startDate: '2026-02-17',
-      startTime: '07:00',
-      endDate: '2026-02-17',
-      endTime: '15:00',
-      description: 'Visual inspection of north elevation facade using rope access techniques.',
-      rams: {
-        status: 'VALIDATED',
-        files: [
-          { name: 'RAMS_HeightWork_NorthFacade.pdf', size: '1.5 MB', type: 'pdf', version: 1, date: '2026-02-16', validated: true, validatedBy: 'Prakash Senghani' }
-        ]
-      },
-      checklist: [true, true, true, true, true, true, true, true],
-      simopsConflicts: [],
-      approvedBy: 'Prakash Senghani',
-      approvedAt: '2026-02-17T06:45:00',
-      createdAt: '2026-02-16T14:00:00',
-      createdBy: 'Emma Walsh',
-      auditLog: [
-        { action: 'Permit Created', user: 'Emma Walsh', time: '2026-02-16T14:00:00', type: 'create' },
-        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-17T06:45:00', type: 'approve' },
-        { action: 'Permit Activated', user: 'System', time: '2026-02-17T07:00:00', type: 'activate' },
-        { action: 'Permit Expired', user: 'System', time: '2026-02-17T15:00:00', type: 'expire' }
+      id: 'c-004', name: 'Pinnacle Scaffolding', regNum: 'ABN 12 456 789 012',
+      buId: 'bu-1', projects: ['proj-1', 'proj-2', 'proj-3'],
+      scopeOfWork: ['Scaffolding', 'Formwork', 'Temporary Works'],
+      contact: 'Craig Thompson', email: 'c.thompson@pinnacle-scaf.com.au', phone: '+61 2 9234 5678',
+      status: 'Under Review', riskLevel: 'High', riskScore: 68,
+      compliancePercent: 61, workerCount: 89, activeWorkers: 75,
+      incidents: 8, openActions: 11, overdueActions: 4,
+      incidents90d: 4, closureSpeed: 22, ifrTrend: 'up',
+      ifr: 4.2, auditFindings: 12, predictiveRisk: 'Deteriorating',
+      aiSummary: '4 overdue corrective actions and expired scaffolding licence detected. Workforce compliance dropped 8% in 60 days. Enterprise review recommended.',
+      trendData: { incidents: [5, 6, 7, 8, 8, 8, 8], compliance: [70, 68, 65, 63, 62, 61, 61], actions: [7, 8, 9, 10, 11, 11, 11] },
+      approvedDate: null, reviewDue: null,
+      documents: [
+        { id: 'd-13', name: 'HSW Policy', status: 'Under Review', expiry: '2026-05-01', version: 'v2.3', uploadDate: '2026-01-10' },
+        { id: 'd-14', name: 'Risk Assessment Plan', status: 'Under Review', expiry: '2026-05-01', version: 'v1.8', uploadDate: '2026-01-10' },
+        { id: 'd-15', name: 'Public Liability Insurance', status: 'Approved', expiry: '2026-06-30', version: 'v1.0', uploadDate: '2026-01-10' },
+        { id: 'd-16', name: 'Scaffolding License', status: 'Non-Compliant', expiry: '2025-12-31', version: 'v1.0', uploadDate: '2025-06-01' }
+      ],
+      approvalHistory: [
+        { date: '2026-01-10', action: 'Under Review', user: 'Marcus Chen', comment: 'Escalated due to high risk score and expired scaffolding license.' },
+        { date: '2026-01-08', action: 'Submitted', user: 'Craig Thompson', comment: 'Annual renewal submission.' }
       ]
     },
     {
-      id: 'PTW-2026-0139',
-      type: 'EXCAVATION',
-      typeName: 'Excavation',
-      typeIcon: '⛏️',
-      title: 'Foundation Trench - Block D',
-      status: 'CLOSED',
-      riskLevel: 'MEDIUM',
-      location: 'Zone D - West Wing',
-      zone: 'Zone D - West Wing',
-      contractor: 'Meridian Industrial',
-      supervisor: 'James Patel',
-      team: 'Ground Works Team (5 persons)',
-      startDate: '2026-02-15',
-      startTime: '07:00',
-      endDate: '2026-02-16',
-      endTime: '17:00',
-      description: 'Excavation of foundation trenches for Block D extension. Depth 2.5m.',
-      rams: {
-        status: 'VALIDATED',
-        files: [
-          { name: 'RAMS_Excavation_BlockD.pdf', size: '2.2 MB', type: 'pdf', version: 2, date: '2026-02-14', validated: true, validatedBy: 'Prakash Senghani' }
-        ]
-      },
-      checklist: [true, true, true, true, true, true, true, true],
-      simopsConflicts: [],
-      approvedBy: 'Prakash Senghani',
-      approvedAt: '2026-02-14T17:00:00',
-      createdAt: '2026-02-14T10:00:00',
-      createdBy: 'James Patel',
-      auditLog: [
-        { action: 'Permit Created', user: 'James Patel', time: '2026-02-14T10:00:00', type: 'create' },
-        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-14T17:00:00', type: 'approve' },
-        { action: 'Permit Closed', user: 'James Patel', time: '2026-02-16T17:30:00', type: 'close' }
+      id: 'c-005', name: 'BlueWave Plumbing', regNum: 'ABN 34 567 890 123',
+      buId: 'bu-3', projects: ['proj-6'],
+      scopeOfWork: ['Plumbing', 'Fire Suppression', 'HVAC'],
+      contact: 'Anita Sharma', email: 'a.sharma@bluewave.com.au', phone: '+61 3 8765 9012',
+      status: 'Draft', riskLevel: 'Low', riskScore: 22,
+      compliancePercent: 0, workerCount: 0, activeWorkers: 0,
+      incidents: 0, openActions: 0, overdueActions: 0,
+      ifr: 0, auditFindings: 0,
+      approvedDate: null, reviewDue: null,
+      documents: [],
+      approvalHistory: [{ date: '2026-02-10', action: 'Draft Created', user: 'Anita Sharma', comment: 'Registration initiated.' }]
+    },
+    {
+      id: 'c-006', name: 'Ironclad Demolition', regNum: 'ABN 56 678 901 234',
+      buId: 'bu-2', projects: ['proj-4'],
+      scopeOfWork: ['Demolition', 'Hazardous Materials', 'Asbestos Removal'],
+      contact: 'Gary Blackwood', email: 'g.blackwood@ironclad.com.au', phone: '+61 2 9345 6789',
+      status: 'Approved', riskLevel: 'Critical', riskScore: 88,
+      compliancePercent: 55, workerCount: 34, activeWorkers: 28,
+      incidents: 12, openActions: 18, overdueActions: 7,
+      incidents90d: 5, closureSpeed: 31, ifrTrend: 'up',
+      ifr: 9.4, auditFindings: 22, predictiveRisk: 'High Risk / Poor Control',
+      aiSummary: 'Critical risk profile. 38% of corrective actions overdue. Asbestos management plan expiring in 20 days. Immediate enterprise intervention required.',
+      trendData: { incidents: [8, 9, 10, 11, 12, 12, 12], compliance: [62, 60, 58, 56, 55, 55, 55], actions: [12, 14, 15, 17, 18, 18, 18] },
+      approvedDate: '2025-05-01', reviewDue: '2025-11-01',
+      documents: [
+        { id: 'd-17', name: 'HSW Policy', status: 'Approved', expiry: '2026-05-01', version: 'v4.1', uploadDate: '2025-04-28' },
+        { id: 'd-18', name: 'Asbestos Management Plan', status: 'Expiring', expiry: '2026-03-10', version: 'v2.0', uploadDate: '2025-04-28' },
+        { id: 'd-19', name: 'Public Liability Insurance', status: 'Approved', expiry: '2026-05-01', version: 'v1.0', uploadDate: '2025-04-28' },
+        { id: 'd-20', name: 'Demolition License', status: 'Approved', expiry: '2027-05-01', version: 'v1.0', uploadDate: '2025-04-28' }
+      ],
+      approvalHistory: [
+        { date: '2025-05-01', action: 'Approved', user: 'Marcus Chen', comment: 'Enhanced approval. Mandatory monthly audits required. Critical risk profile.' },
+        { date: '2025-04-25', action: 'Under Review', user: 'Prakash Senghani', comment: 'Critical risk — Enterprise HSE review required.' },
+        { date: '2025-04-20', action: 'Submitted', user: 'Gary Blackwood', comment: 'Submission for Offshore Platform project.' }
       ]
     },
     {
-      id: 'PTW-2026-0138',
-      type: 'HOT_WORK',
-      typeName: 'Hot Work',
-      typeIcon: '🔥',
-      title: 'Pipe Welding - Mechanical Room',
-      status: 'SUSPENDED',
-      riskLevel: 'HIGH',
-      location: 'Zone G - Plant Room',
-      zone: 'Zone G - Plant Room',
-      contractor: 'Apex Construction Ltd',
-      supervisor: 'Mike Thompson',
-      team: 'Welding Team Beta (3 persons)',
-      startDate: '2026-02-18',
-      startTime: '10:00',
-      endDate: '2026-02-18',
-      endTime: '16:00',
-      description: 'Welding of HVAC pipe connections in mechanical plant room.',
-      rams: {
-        status: 'VALIDATED',
-        files: [
-          { name: 'RAMS_HotWork_PlantRoom.pdf', size: '1.9 MB', type: 'pdf', version: 1, date: '2026-02-17', validated: true, validatedBy: 'Prakash Senghani' }
-        ]
-      },
-      checklist: [true, true, true, true, true, true, true, true],
-      simopsConflicts: [],
-      approvedBy: 'Prakash Senghani',
-      approvedAt: '2026-02-18T09:30:00',
-      suspendedAt: '2026-02-18T11:15:00',
-      suspendedReason: 'Gas leak detected in adjacent area. Permit suspended pending investigation.',
-      createdAt: '2026-02-17T16:00:00',
-      createdBy: 'Mike Thompson',
-      auditLog: [
-        { action: 'Permit Created', user: 'Mike Thompson', time: '2026-02-17T16:00:00', type: 'create' },
-        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-18T09:30:00', type: 'approve' },
-        { action: 'Permit Activated', user: 'System', time: '2026-02-18T10:00:00', type: 'activate' },
-        { action: 'Permit SUSPENDED', user: 'Prakash Senghani', time: '2026-02-18T11:15:00', type: 'suspend', detail: 'Gas leak detected in adjacent area' }
+      id: 'c-007', name: 'GreenBuild Sustainability', regNum: 'ABN 78 789 012 345',
+      buId: 'bu-2', projects: ['proj-5'],
+      scopeOfWork: ['Solar Installation', 'Electrical', 'Civil Works'],
+      contact: 'Priya Mehta', email: 'p.mehta@greenbuild.com.au', phone: '+61 8 9234 5678',
+      status: 'Approved', riskLevel: 'Low', riskScore: 24,
+      compliancePercent: 94, workerCount: 28, activeWorkers: 28,
+      incidents: 1, openActions: 1, overdueActions: 0,
+      incidents90d: 0, closureSpeed: 4, ifrTrend: 'stable',
+      ifr: 0.8, auditFindings: 2, predictiveRisk: 'Improving',
+      aiSummary: 'Strong compliance trajectory. Closure speed well above benchmark. Incident rate trending toward zero. Recommended for preferred supplier list.',
+      trendData: { incidents: [2, 1, 1, 1, 1, 1, 1], compliance: [90, 91, 92, 93, 94, 94, 94], actions: [2, 2, 1, 1, 1, 1, 1] },
+      approvedDate: '2025-10-01', reviewDue: '2026-10-01',
+      documents: [
+        { id: 'd-21', name: 'HSW Policy', status: 'Approved', expiry: '2026-10-01', version: 'v2.0', uploadDate: '2025-09-28' },
+        { id: 'd-22', name: 'Risk Assessment Plan', status: 'Approved', expiry: '2026-10-01', version: 'v1.2', uploadDate: '2025-09-28' },
+        { id: 'd-23', name: 'Public Liability Insurance', status: 'Approved', expiry: '2026-10-01', version: 'v1.0', uploadDate: '2025-09-28' }
+      ],
+      approvalHistory: [
+        { date: '2025-10-01', action: 'Approved', user: 'Sarah Okafor', comment: 'Excellent HSW record. Approved.' },
+        { date: '2025-09-29', action: 'Submitted', user: 'Priya Mehta', comment: 'Submission for Solar Farm project.' }
+      ]
+    },
+    {
+      id: 'c-008', name: 'Fortis Cranes & Rigging', regNum: 'ABN 90 890 123 456',
+      buId: 'bu-1', projects: ['proj-1'],
+      scopeOfWork: ['Crane Operations', 'Rigging', 'Heavy Lift'],
+      contact: 'Steve Kowalski', email: 's.kowalski@fortiscranes.com.au', phone: '+61 2 9456 7890',
+      status: 'Suspended', riskLevel: 'Critical', riskScore: 91,
+      compliancePercent: 30, workerCount: 15, activeWorkers: 0,
+      incidents: 15, openActions: 23, overdueActions: 14,
+      incidents90d: 7, closureSpeed: 45, ifrTrend: 'up',
+      ifr: 12.6, auditFindings: 31, predictiveRisk: 'High Risk / Poor Control',
+      aiSummary: 'Suspended following fatal incident. 61% corrective actions overdue. All licences non-compliant. Enterprise intervention logged. No reinstatement pathway until investigation closes.',
+      trendData: { incidents: [9, 11, 12, 14, 15, 15, 15], compliance: [55, 48, 42, 38, 32, 30, 30], actions: [15, 18, 20, 22, 23, 23, 23] },
+      approvedDate: null, reviewDue: null,
+      documents: [
+        { id: 'd-24', name: 'HSW Policy', status: 'Non-Compliant', expiry: '2025-06-30', version: 'v1.0', uploadDate: '2024-07-01' },
+        { id: 'd-25', name: 'Crane Operator License', status: 'Non-Compliant', expiry: '2025-09-30', version: 'v1.0', uploadDate: '2024-10-01' }
+      ],
+      approvalHistory: [
+        { date: '2026-01-05', action: 'Suspended', user: 'Prakash Senghani', comment: 'Suspended following fatal incident investigation. All works halted.' },
+        { date: '2025-12-20', action: 'Approved', user: 'Marcus Chen', comment: 'Previously approved.' }
       ]
     }
   ],
 
-  // Notifications
-  notifications: [
-    {
-      id: 'N001',
-      type: 'conflict',
-      title: 'SIMOPS Conflict Detected',
-      body: 'PTW-2026-0141 conflicts with PTW-2026-0143 in Zone E on 19 Feb 2026.',
-      time: '2026-02-18T09:46:00',
-      read: false,
-      permitId: 'PTW-2026-0141'
-    },
-    {
-      id: 'N002',
-      type: 'approval',
-      title: 'Permit Requires Approval',
-      body: 'PTW-2026-0141 (Confined Space - Zone E) is awaiting your approval.',
-      time: '2026-02-18T09:45:00',
-      read: false,
-      permitId: 'PTW-2026-0141'
-    },
-    {
-      id: 'N003',
-      type: 'suspend',
-      title: 'Permit Suspended',
-      body: 'PTW-2026-0138 has been suspended due to gas leak in adjacent area.',
-      time: '2026-02-18T11:15:00',
-      read: false,
-      permitId: 'PTW-2026-0138'
-    },
-    {
-      id: 'N004',
-      type: 'expiry',
-      title: 'Permit Expiring Soon',
-      body: 'PTW-2026-0142 (Hot Work - Block C) expires today at 17:00.',
-      time: '2026-02-18T14:00:00',
-      read: true,
-      permitId: 'PTW-2026-0142'
-    },
-    {
-      id: 'N005',
-      type: 'rams',
-      title: 'RAMS Validation Required',
-      body: 'RAMS document for PTW-2026-0141 requires HSE validation before approval.',
-      time: '2026-02-18T09:47:00',
-      read: true,
-      permitId: 'PTW-2026-0141'
-    }
+  workers: [
+    { id: 'w-001', contractorId: 'c-001', name: 'Michael Torres', idNum: 'EMP-2341', role: 'Site Engineer', project: 'proj-1', certifications: ['First Aid', 'White Card', 'Confined Space'], expiryDate: '2026-12-31', complianceStatus: 'Compliant' },
+    { id: 'w-002', contractorId: 'c-001', name: 'Fiona Campbell', idNum: 'EMP-2342', role: 'Safety Officer', project: 'proj-1', certifications: ['First Aid', 'White Card', 'HSE Officer'], expiryDate: '2026-09-30', complianceStatus: 'Compliant' },
+    { id: 'w-003', contractorId: 'c-001', name: 'Ahmed Hassan', idNum: 'EMP-2343', role: 'Plant Operator', project: 'proj-3', certifications: ['White Card', 'Excavator License'], expiryDate: '2026-03-10', complianceStatus: 'Expiring' },
+    { id: 'w-004', contractorId: 'c-001', name: 'Lucy Zhang', idNum: 'EMP-2344', role: 'Labourer', project: 'proj-1', certifications: ['White Card'], expiryDate: '2026-01-15', complianceStatus: 'Non-Compliant' },
+    { id: 'w-005', contractorId: 'c-002', name: 'Paul Dempsey', idNum: 'EMP-3101', role: 'Electrician', project: 'proj-2', certifications: ['Electrical License', 'White Card', 'HV Switching'], expiryDate: '2026-08-31', complianceStatus: 'Compliant' },
+    { id: 'w-006', contractorId: 'c-002', name: 'Nina Petrov', idNum: 'EMP-3102', role: 'Electrical Supervisor', project: 'proj-2', certifications: ['Electrical License', 'White Card', 'HV Switching', 'First Aid'], expiryDate: '2026-02-28', complianceStatus: 'Expiring' },
+    { id: 'w-007', contractorId: 'c-004', name: 'Raj Patel', idNum: 'EMP-4201', role: 'Scaffolder', project: 'proj-1', certifications: ['Scaffolding License', 'White Card'], expiryDate: '2025-12-01', complianceStatus: 'Non-Compliant' },
+    { id: 'w-008', contractorId: 'c-004', name: 'Donna Walsh', idNum: 'EMP-4202', role: 'Scaffolding Supervisor', project: 'proj-2', certifications: ['Scaffolding License', 'White Card', 'First Aid'], expiryDate: '2026-07-31', complianceStatus: 'Compliant' },
+    { id: 'w-009', contractorId: 'c-006', name: 'Kevin Marsh', idNum: 'EMP-5301', role: 'Demolition Operator', project: 'proj-4', certifications: ['Demolition License', 'Asbestos Removal', 'White Card'], expiryDate: '2026-05-31', complianceStatus: 'Compliant' },
+    { id: 'w-010', contractorId: 'c-006', name: 'Sandra Lee', idNum: 'EMP-5302', role: 'Asbestos Supervisor', project: 'proj-4', certifications: ['Asbestos Supervisor', 'White Card', 'First Aid'], expiryDate: '2026-02-20', complianceStatus: 'Expiring' },
+    { id: 'w-011', contractorId: 'c-007', name: 'Chris Nguyen', idNum: 'EMP-6101', role: 'Solar Installer', project: 'proj-5', certifications: ['Electrical License', 'White Card', 'Working at Heights'], expiryDate: '2026-10-31', complianceStatus: 'Compliant' },
+    { id: 'w-012', contractorId: 'c-003', name: 'Maria Santos', idNum: 'EMP-7201', role: 'Landscaper', project: 'proj-6', certifications: ['White Card', 'Chemical Handling'], expiryDate: '2026-11-30', complianceStatus: 'Compliant' }
   ],
 
-  // Global Audit Log
-  auditLog: [
-    { id: 'A001', action: 'SIMOPS Conflict Detected', permitId: 'PTW-2026-0141', user: 'System', time: '2026-02-18T09:46:00', type: 'conflict', detail: 'Zone E conflict with PTW-2026-0143, overlap 08:00-14:00' },
-    { id: 'A002', action: 'Permit Suspended', permitId: 'PTW-2026-0138', user: 'Prakash Senghani', time: '2026-02-18T11:15:00', type: 'suspend', detail: 'Gas leak detected in adjacent area' },
-    { id: 'A003', action: 'Permit Approved', permitId: 'PTW-2026-0143', user: 'Prakash Senghani', time: '2026-02-18T08:30:00', type: 'approve', detail: 'All conditions met. RAMS validated.' },
-    { id: 'A004', action: 'Permit Activated', permitId: 'PTW-2026-0142', user: 'System', time: '2026-02-18T08:00:00', type: 'activate', detail: 'Permit start time reached' },
-    { id: 'A005', action: 'RAMS Validated', permitId: 'PTW-2026-0142', user: 'Prakash Senghani', time: '2026-02-17T16:00:00', type: 'validate', detail: 'RAMS_HotWork_BlockC_v2.pdf validated' },
-    { id: 'A006', action: 'Permit Submitted', permitId: 'PTW-2026-0141', user: 'Sarah Chen', time: '2026-02-18T09:45:00', type: 'submit', detail: 'Submitted for HSE review' },
-    { id: 'A007', action: 'Permit Expired', permitId: 'PTW-2026-0140', user: 'System', time: '2026-02-17T15:00:00', type: 'expire', detail: 'Permit validity window ended' },
-    { id: 'A008', action: 'Override Requested', permitId: 'PTW-2026-0141', user: 'Sarah Chen', time: '2026-02-18T10:00:00', type: 'override', detail: 'Justification: Different work areas within zone, no direct interaction' },
-    { id: 'A009', action: 'Permit Closed', permitId: 'PTW-2026-0139', user: 'James Patel', time: '2026-02-16T17:30:00', type: 'close', detail: 'Work completed. Site cleared and inspected.' },
-    { id: 'A010', action: 'Permit Created', permitId: 'PTW-2026-0141', user: 'Sarah Chen', time: '2026-02-18T09:00:00', type: 'create', detail: 'Draft created' }
+  incidents: [
+    { id: 'inc-001', contractorId: 'c-002', date: '2025-11-15', type: 'Near Miss', severity: 'High', description: 'Electrical arc flash near miss during HV switching', status: 'Closed', project: 'proj-2' },
+    { id: 'inc-002', contractorId: 'c-004', date: '2025-12-03', type: 'LTI', severity: 'Serious', description: 'Worker fall from scaffolding — 2m drop', status: 'Open', project: 'proj-1' },
+    { id: 'inc-003', contractorId: 'c-006', date: '2025-10-22', type: 'MTI', severity: 'Medium', description: 'Asbestos exposure during demolition works', status: 'Closed', project: 'proj-4' },
+    { id: 'inc-004', contractorId: 'c-008', date: '2025-12-18', type: 'Fatality', severity: 'Critical', description: 'Crane load drop — fatal incident', status: 'Under Investigation', project: 'proj-1' },
+    { id: 'inc-005', contractorId: 'c-001', date: '2025-09-10', type: 'First Aid', severity: 'Low', description: 'Minor laceration during formwork installation', status: 'Closed', project: 'proj-3' }
+  ],
+
+  correctiveActions: [
+    { id: 'ca-001', contractorId: 'c-002', incidentId: 'inc-001', description: 'Update HV switching procedure', dueDate: '2026-01-31', status: 'Open', priority: 'High', assignee: 'Rachel Kim' },
+    { id: 'ca-002', contractorId: 'c-004', incidentId: 'inc-002', description: 'Conduct scaffolding safety audit', dueDate: '2026-01-15', status: 'Overdue', priority: 'Critical', assignee: 'Craig Thompson' },
+    { id: 'ca-003', contractorId: 'c-004', description: 'Implement fall arrest system on all platforms', dueDate: '2026-02-28', status: 'Open', priority: 'High', assignee: 'Craig Thompson' },
+    { id: 'ca-004', contractorId: 'c-006', incidentId: 'inc-003', description: 'Review asbestos management plan', dueDate: '2025-12-31', status: 'Overdue', priority: 'Critical', assignee: 'Gary Blackwood' },
+    { id: 'ca-005', contractorId: 'c-006', description: 'Mandatory toolbox talks — weekly', dueDate: '2026-03-01', status: 'Open', priority: 'Medium', assignee: 'Gary Blackwood' }
+  ],
+
+  performanceTrend: {
+    monthly: {
+      labels: ['Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'],
+      incidents: [2, 3, 4, 6, 8, 5, 3],
+      compliance: [82, 84, 79, 75, 71, 74, 77],
+      actions: [5, 7, 9, 14, 18, 16, 12]
+    },
+    weekly: {
+      labels: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7'],
+      incidents: [1, 0, 2, 1, 3, 1, 0],
+      compliance: [76, 77, 75, 78, 74, 77, 79],
+      actions: [14, 13, 15, 14, 16, 13, 12]
+    }
+  },
+
+  enterpriseKPIs: {
+    totalContractors: 24, totalContractorsTrend: +3, totalContractorsPct: +14,
+    activeContractors: 19, activeContractorsTrend: +2, activeContractorsPct: +12,
+    ifr: 4.2, ifrTrend: 'up', ifrPct: +8,
+    highRisk: 6, highRiskTrend: +2, highRiskPct: +50,
+    overdueActionsPct: 34, overdueActionsTrend: 'up', overdueActionsPctChange: +11,
+    workforceCompliance: 77, workforceComplianceTrend: 'down', workforceCompliancePct: -3,
+    openAudits: 14, openAuditsTrend: +3, openAuditsPct: +27,
+    riskExposureScore: 68, riskExposureTrend: 'up', riskExposurePct: +9,
+    fullyCompliant: 14, criticalRisk: 2,
+    totalWorkers: 312, compliantWorkers: 241,
+    openActions: 67, overdueActions: 23,
+    totalIncidents: 45, avgCompliancePct: 77
+  },
+
+  projectBenchmarks: [
+    { id: 'proj-1', name: 'M7 Motorway', ifr: 3.8, compliance: 74, contractors: 5, incidents: 9 },
+    { id: 'proj-2', name: 'Harbour Bridge', ifr: 5.1, compliance: 69, contractors: 3, incidents: 7 },
+    { id: 'proj-3', name: 'Western Rail', ifr: 2.4, compliance: 82, contractors: 4, incidents: 4 },
+    { id: 'proj-4', name: 'Offshore Alpha', ifr: 9.4, compliance: 55, contractors: 2, incidents: 14 },
+    { id: 'proj-5', name: 'Solar Narrabri', ifr: 0.8, compliance: 94, contractors: 2, incidents: 1 },
+    { id: 'proj-6', name: 'CBD Tower', ifr: 1.2, compliance: 91, contractors: 4, incidents: 2 },
+    { id: 'proj-7', name: 'Westfield', ifr: 0.6, compliance: 95, contractors: 3, incidents: 1 },
+    { id: 'proj-8', name: 'Airport T3', ifr: 2.9, compliance: 80, contractors: 3, incidents: 5 }
+  ],
+
+  buBenchmarks: [
+    { id: 'bu-1', name: 'Infrastructure', ifr: 4.1, compliance: 72, contractors: 8, incidents: 20 },
+    { id: 'bu-2', name: 'Energy & Resources', ifr: 5.8, compliance: 66, contractors: 7, incidents: 16 },
+    { id: 'bu-3', name: 'Civil Construction', ifr: 0.9, compliance: 92, contractors: 9, incidents: 4 }
+  ],
+
+  escalationLog: [
+    { id: 'esc-001', contractorId: 'c-008', contractor: 'Fortis Cranes & Rigging', date: '2026-01-05', trigger: 'Fatal incident + 14 overdue actions', status: 'Reviewed', reviewedBy: 'Prakash Senghani', reviewDate: '2026-01-06', notes: 'Suspended pending investigation. Legal team engaged. No works to proceed.' },
+    { id: 'esc-002', contractorId: 'c-006', contractor: 'Ironclad Demolition', date: '2026-02-10', trigger: '7 overdue actions, IFR 9.4, compliance < 60%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null },
+    { id: 'esc-003', contractorId: 'c-004', contractor: 'Pinnacle Scaffolding', date: '2026-02-12', trigger: '4 overdue actions, expired scaffolding licence, compliance 61%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null }
+  ],
+
+  complianceAlerts: [
+    { id: 'al-001', type: 'critical', category: 'Document Expiry', title: 'Insurance Certificate Expired', contractor: 'Fortis Cranes & Rigging', detail: 'Public Liability Insurance expired 2025-06-30', date: '2026-02-15', contractorId: 'c-008' },
+    { id: 'al-002', type: 'critical', category: 'Worker Certification', title: 'Worker Non-Compliant', contractor: 'Apex Civil Engineering', detail: 'Lucy Zhang — White Card expired 2026-01-15', date: '2026-02-16', contractorId: 'c-001' },
+    { id: 'al-003', type: 'warning', category: 'Document Expiry', title: 'Document Expiring in 20 days', contractor: 'Ironclad Demolition', detail: 'Asbestos Management Plan expires 2026-03-10', date: '2026-02-18', contractorId: 'c-006' },
+    { id: 'al-004', type: 'warning', category: 'Worker Certification', title: 'Certification Expiring in 10 days', contractor: 'SafeGuard Electrical', detail: 'Nina Petrov — Electrical License expires 2026-02-28', date: '2026-02-18', contractorId: 'c-002' },
+    { id: 'al-005', type: 'critical', category: 'Overdue Actions', title: 'Corrective Actions Overdue', contractor: 'Pinnacle Scaffolding', detail: '4 corrective actions overdue — escalation recommended', date: '2026-02-17', contractorId: 'c-004' }
   ]
 };
 
-// App State
-
+// Helper: get contractor by id
+function getContractor(id) { return DB.contractors.find(c => c.id === id); }
+function getWorkersByContractor(cId) { return DB.workers.filter(w => w.contractorId === cId); }
+function getIncidentsByContractor(cId) { return DB.incidents.filter(i => i.contractorId === cId); }
+function getActionsByContractor(cId) { return DB.correctiveActions.filter(a => a.contractorId === cId); }
+function getProject(id) { return DB.projects.find(p => p.id === id); }
+function getBU(id) { return DB.businessUnits.find(b => b.id === id); }
