@@ -146,7 +146,7 @@ window.renderReports = function () {
                 <td class="col-name">${r.name}</td>
                 <td><span class="badge badge-approved">${r.type}</span></td>
                 <td>${r.by}</td>
-                <td>${formatDate(r.date)}</td>
+                <td>${fmtDate(r.date)}</td>
                 <td><span class="badge badge-compliant">Ready</span></td>
                 <td><button class="btn btn-ghost btn-sm" onclick="showToast('Report downloaded', 'success')">Download</button></td>
               </tr>`).join('')}
