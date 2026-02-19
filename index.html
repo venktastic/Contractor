@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="description" content="Permit to Work (PTW) Mobile HSE Application for Construction Safety" />
-  <title>SafeWork PTW | HSE Permit Management</title>
+  <title>ePermits | HSE Permit Management</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
@@ -26,8 +26,8 @@
             <img src="assets/logo.png" alt="Company Logo" width="64" height="64" style="object-fit:contain;" />
           </div>
           <div class="splash-text">
-            <h1>SafeWork PTW</h1>
-            <p>HSE Permit Management</p>
+            <h1>ePermits</h1>
+            <p>24 Feb 2026 · HSE Permit Management</p>
           </div>
         </div>
         <div class="splash-loader">
@@ -40,17 +40,21 @@
     <!-- Main App Container -->
     <div id="main-app" class="main-app hidden">
       <!-- Top Navigation Bar -->
-      <header class="top-nav" id="top-nav">
+      <header class="top-nav" id="top-nav" style="position:relative">
         <div class="nav-left">
           <button class="nav-btn back-btn hidden" id="back-btn" onclick="goBack()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path d="M19 12H5M12 5l-7 7 7 7" />
             </svg>
           </button>
-          <div class="nav-logo" onclick="navigateTo('dashboard')">
-            <img src="assets/logo.png" alt="Logo" width="32" height="32" style="object-fit:contain;" />
-            <span id="nav-title">SafeWork PTW</span>
-          </div>
+        </div>
+        <!-- Centered App Name -->
+        <div
+          style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;cursor:pointer"
+          onclick="navigateTo('dashboard')">
+          <img src="assets/logo.png" alt="Logo" width="28" height="28" style="object-fit:contain;" />
+          <span id="nav-title"
+            style="font-size:var(--font-size-md);font-weight:700;letter-spacing:-0.3px">ePermits</span>
         </div>
         <div class="nav-right">
           <button class="nav-btn notif-btn" onclick="navigateTo('notifications')" id="notif-btn">

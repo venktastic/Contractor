@@ -17,7 +17,7 @@ function renderDashboard() {
     <div class="dashboard-page">
       <!-- Hero -->
       <div class="dashboard-hero">
-        <p class="hero-greeting">Permit to Work</p>
+        <p class="hero-greeting">Good Day,</p>
         <h1 class="hero-title" style="color:white;background:none;-webkit-background-clip:unset;-webkit-text-fill-color:white">Prakash Senghani</h1>
         <p class="hero-date">📅 ${dateStr}</p>
       </div>

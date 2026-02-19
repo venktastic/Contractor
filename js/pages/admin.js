@@ -3,12 +3,12 @@
 // ============================================
 
 function renderAdmin() {
-    return `
+  return `
     <div class="admin-page">
       <!-- Profile Section -->
       <div style="background:linear-gradient(135deg,#1E293B,#0F172A);padding:var(--space-6) var(--space-4);text-align:center;border-bottom:1px solid var(--border)">
-        <div class="avatar-lg" style="width:64px;height:64px;font-size:var(--font-size-lg);margin:0 auto var(--space-3)">JD</div>
-        <p style="font-size:var(--font-size-lg);font-weight:700;color:var(--text-primary)">John Davies</p>
+        <div class="avatar-lg" style="width:64px;height:64px;font-size:var(--font-size-lg);margin:0 auto var(--space-3)">PS</div>
+        <p style="font-size:var(--font-size-lg);font-weight:700;color:#ffffff">Prakash Senghani</p>
         <p style="font-size:var(--font-size-sm);color:var(--text-muted)">HSE Manager · Enterprise License</p>
         <div style="display:flex;gap:var(--space-2);justify-content:center;margin-top:var(--space-3)">
           <span class="badge badge-approved">Full Access</span>
@@ -90,7 +90,7 @@ function renderAdmin() {
         ${adminRow('📊', 'Reports & Analytics', 'Export permit data and trends', 'var(--warning-bg)', 'var(--warning)')}
         ${adminRow('🔒', 'Role Permissions', 'Manage user roles and access', 'var(--danger-bg)', 'var(--danger)')}
         ${adminRow('💾', 'Data Backup', 'Last backup: Today 06:00', 'var(--success-bg)', 'var(--success)')}
-        ${adminRow('ℹ️', 'App Version', 'SafeWork PTW v2.4.1', 'rgba(100,116,139,0.15)', 'var(--gray-400)')}
+        ${adminRow('ℹ️', 'App Version', 'Permit to Work v2.4.1', 'rgba(100,116,139,0.15)', 'var(--gray-400)')}
       </div>
 
       <div style="height:var(--space-8)"></div>
@@ -99,7 +99,7 @@ function renderAdmin() {
 }
 
 function adminRow(icon, title, sub, bg, color) {
-    return `
+  return `
     <div class="admin-row" onclick="showToast('Opening ${title}...', 'info')">
       <div class="admin-row-left">
         <div class="admin-row-icon" style="background:${bg}">

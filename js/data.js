@@ -86,8 +86,8 @@ const PTW_DATA = {
   // Current user
   currentUser: {
     id: 'USR001',
-    name: 'John Davies',
-    initials: 'JD',
+    name: 'Prakash Senghani',
+    initials: 'PS',
     role: 'HSE Manager',
     permissions: ['create', 'approve', 'reject', 'override', 'admin']
   },
@@ -253,12 +253,12 @@ const PTW_DATA = {
       rams: {
         status: 'VALIDATED',
         files: [
-          { name: 'RAMS_HotWork_BlockC_v2.pdf', size: '2.4 MB', type: 'pdf', version: 2, date: '2026-02-17', validated: true, validatedBy: 'John Davies' }
+          { name: 'RAMS_HotWork_BlockC_v2.pdf', size: '2.4 MB', type: 'pdf', version: 2, date: '2026-02-17', validated: true, validatedBy: 'Prakash Senghani' }
         ]
       },
       checklist: [true, true, true, true, true, false, true, true],
       simopsConflicts: [],
-      approvedBy: 'John Davies',
+      approvedBy: 'Prakash Senghani',
       approvedAt: '2026-02-18T07:45:00',
       createdAt: '2026-02-17T14:30:00',
       createdBy: 'Mike Thompson',
@@ -266,8 +266,8 @@ const PTW_DATA = {
         { action: 'Permit Created', user: 'Mike Thompson', time: '2026-02-17T14:30:00', type: 'create' },
         { action: 'RAMS Uploaded', user: 'Mike Thompson', time: '2026-02-17T15:00:00', type: 'upload', detail: 'RAMS_HotWork_BlockC_v2.pdf' },
         { action: 'Submitted for Review', user: 'Mike Thompson', time: '2026-02-17T15:15:00', type: 'submit' },
-        { action: 'RAMS Validated', user: 'John Davies', time: '2026-02-17T16:00:00', type: 'validate' },
-        { action: 'Permit Approved', user: 'John Davies', time: '2026-02-18T07:45:00', type: 'approve' },
+        { action: 'RAMS Validated', user: 'Prakash Senghani', time: '2026-02-17T16:00:00', type: 'validate' },
+        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-18T07:45:00', type: 'approve' },
         { action: 'Permit Activated', user: 'System', time: '2026-02-18T08:00:00', type: 'activate' }
       ]
     },
@@ -328,12 +328,12 @@ const PTW_DATA = {
       rams: {
         status: 'VALIDATED',
         files: [
-          { name: 'RAMS_Electrical_SubB_v3.pdf', size: '3.1 MB', type: 'pdf', version: 3, date: '2026-02-17', validated: true, validatedBy: 'John Davies' }
+          { name: 'RAMS_Electrical_SubB_v3.pdf', size: '3.1 MB', type: 'pdf', version: 3, date: '2026-02-17', validated: true, validatedBy: 'Prakash Senghani' }
         ]
       },
       checklist: [true, true, true, true, true, true, true, true],
       simopsConflicts: ['PTW-2026-0141'],
-      approvedBy: 'John Davies',
+      approvedBy: 'Prakash Senghani',
       approvedAt: '2026-02-18T08:30:00',
       createdAt: '2026-02-17T10:00:00',
       createdBy: 'David Okafor',
@@ -341,8 +341,8 @@ const PTW_DATA = {
         { action: 'Permit Created', user: 'David Okafor', time: '2026-02-17T10:00:00', type: 'create' },
         { action: 'RAMS Uploaded (v3)', user: 'David Okafor', time: '2026-02-17T10:30:00', type: 'upload' },
         { action: 'Submitted for Review', user: 'David Okafor', time: '2026-02-17T11:00:00', type: 'submit' },
-        { action: 'RAMS Validated', user: 'John Davies', time: '2026-02-17T14:00:00', type: 'validate' },
-        { action: 'Permit Approved', user: 'John Davies', time: '2026-02-18T08:30:00', type: 'approve' }
+        { action: 'RAMS Validated', user: 'Prakash Senghani', time: '2026-02-17T14:00:00', type: 'validate' },
+        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-18T08:30:00', type: 'approve' }
       ]
     },
     {
@@ -366,18 +366,18 @@ const PTW_DATA = {
       rams: {
         status: 'VALIDATED',
         files: [
-          { name: 'RAMS_HeightWork_NorthFacade.pdf', size: '1.5 MB', type: 'pdf', version: 1, date: '2026-02-16', validated: true, validatedBy: 'John Davies' }
+          { name: 'RAMS_HeightWork_NorthFacade.pdf', size: '1.5 MB', type: 'pdf', version: 1, date: '2026-02-16', validated: true, validatedBy: 'Prakash Senghani' }
         ]
       },
       checklist: [true, true, true, true, true, true, true, true],
       simopsConflicts: [],
-      approvedBy: 'John Davies',
+      approvedBy: 'Prakash Senghani',
       approvedAt: '2026-02-17T06:45:00',
       createdAt: '2026-02-16T14:00:00',
       createdBy: 'Emma Walsh',
       auditLog: [
         { action: 'Permit Created', user: 'Emma Walsh', time: '2026-02-16T14:00:00', type: 'create' },
-        { action: 'Permit Approved', user: 'John Davies', time: '2026-02-17T06:45:00', type: 'approve' },
+        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-17T06:45:00', type: 'approve' },
         { action: 'Permit Activated', user: 'System', time: '2026-02-17T07:00:00', type: 'activate' },
         { action: 'Permit Expired', user: 'System', time: '2026-02-17T15:00:00', type: 'expire' }
       ]
@@ -403,18 +403,18 @@ const PTW_DATA = {
       rams: {
         status: 'VALIDATED',
         files: [
-          { name: 'RAMS_Excavation_BlockD.pdf', size: '2.2 MB', type: 'pdf', version: 2, date: '2026-02-14', validated: true, validatedBy: 'John Davies' }
+          { name: 'RAMS_Excavation_BlockD.pdf', size: '2.2 MB', type: 'pdf', version: 2, date: '2026-02-14', validated: true, validatedBy: 'Prakash Senghani' }
         ]
       },
       checklist: [true, true, true, true, true, true, true, true],
       simopsConflicts: [],
-      approvedBy: 'John Davies',
+      approvedBy: 'Prakash Senghani',
       approvedAt: '2026-02-14T17:00:00',
       createdAt: '2026-02-14T10:00:00',
       createdBy: 'James Patel',
       auditLog: [
         { action: 'Permit Created', user: 'James Patel', time: '2026-02-14T10:00:00', type: 'create' },
-        { action: 'Permit Approved', user: 'John Davies', time: '2026-02-14T17:00:00', type: 'approve' },
+        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-14T17:00:00', type: 'approve' },
         { action: 'Permit Closed', user: 'James Patel', time: '2026-02-16T17:30:00', type: 'close' }
       ]
     },
@@ -439,12 +439,12 @@ const PTW_DATA = {
       rams: {
         status: 'VALIDATED',
         files: [
-          { name: 'RAMS_HotWork_PlantRoom.pdf', size: '1.9 MB', type: 'pdf', version: 1, date: '2026-02-17', validated: true, validatedBy: 'John Davies' }
+          { name: 'RAMS_HotWork_PlantRoom.pdf', size: '1.9 MB', type: 'pdf', version: 1, date: '2026-02-17', validated: true, validatedBy: 'Prakash Senghani' }
         ]
       },
       checklist: [true, true, true, true, true, true, true, true],
       simopsConflicts: [],
-      approvedBy: 'John Davies',
+      approvedBy: 'Prakash Senghani',
       approvedAt: '2026-02-18T09:30:00',
       suspendedAt: '2026-02-18T11:15:00',
       suspendedReason: 'Gas leak detected in adjacent area. Permit suspended pending investigation.',
@@ -452,9 +452,9 @@ const PTW_DATA = {
       createdBy: 'Mike Thompson',
       auditLog: [
         { action: 'Permit Created', user: 'Mike Thompson', time: '2026-02-17T16:00:00', type: 'create' },
-        { action: 'Permit Approved', user: 'John Davies', time: '2026-02-18T09:30:00', type: 'approve' },
+        { action: 'Permit Approved', user: 'Prakash Senghani', time: '2026-02-18T09:30:00', type: 'approve' },
         { action: 'Permit Activated', user: 'System', time: '2026-02-18T10:00:00', type: 'activate' },
-        { action: 'Permit SUSPENDED', user: 'John Davies', time: '2026-02-18T11:15:00', type: 'suspend', detail: 'Gas leak detected in adjacent area' }
+        { action: 'Permit SUSPENDED', user: 'Prakash Senghani', time: '2026-02-18T11:15:00', type: 'suspend', detail: 'Gas leak detected in adjacent area' }
       ]
     }
   ],
@@ -511,10 +511,10 @@ const PTW_DATA = {
   // Global Audit Log
   auditLog: [
     { id: 'A001', action: 'SIMOPS Conflict Detected', permitId: 'PTW-2026-0141', user: 'System', time: '2026-02-18T09:46:00', type: 'conflict', detail: 'Zone E conflict with PTW-2026-0143, overlap 08:00-14:00' },
-    { id: 'A002', action: 'Permit Suspended', permitId: 'PTW-2026-0138', user: 'John Davies', time: '2026-02-18T11:15:00', type: 'suspend', detail: 'Gas leak detected in adjacent area' },
-    { id: 'A003', action: 'Permit Approved', permitId: 'PTW-2026-0143', user: 'John Davies', time: '2026-02-18T08:30:00', type: 'approve', detail: 'All conditions met. RAMS validated.' },
+    { id: 'A002', action: 'Permit Suspended', permitId: 'PTW-2026-0138', user: 'Prakash Senghani', time: '2026-02-18T11:15:00', type: 'suspend', detail: 'Gas leak detected in adjacent area' },
+    { id: 'A003', action: 'Permit Approved', permitId: 'PTW-2026-0143', user: 'Prakash Senghani', time: '2026-02-18T08:30:00', type: 'approve', detail: 'All conditions met. RAMS validated.' },
     { id: 'A004', action: 'Permit Activated', permitId: 'PTW-2026-0142', user: 'System', time: '2026-02-18T08:00:00', type: 'activate', detail: 'Permit start time reached' },
-    { id: 'A005', action: 'RAMS Validated', permitId: 'PTW-2026-0142', user: 'John Davies', time: '2026-02-17T16:00:00', type: 'validate', detail: 'RAMS_HotWork_BlockC_v2.pdf validated' },
+    { id: 'A005', action: 'RAMS Validated', permitId: 'PTW-2026-0142', user: 'Prakash Senghani', time: '2026-02-17T16:00:00', type: 'validate', detail: 'RAMS_HotWork_BlockC_v2.pdf validated' },
     { id: 'A006', action: 'Permit Submitted', permitId: 'PTW-2026-0141', user: 'Sarah Chen', time: '2026-02-18T09:45:00', type: 'submit', detail: 'Submitted for HSE review' },
     { id: 'A007', action: 'Permit Expired', permitId: 'PTW-2026-0140', user: 'System', time: '2026-02-17T15:00:00', type: 'expire', detail: 'Permit validity window ended' },
     { id: 'A008', action: 'Override Requested', permitId: 'PTW-2026-0141', user: 'Sarah Chen', time: '2026-02-18T10:00:00', type: 'override', detail: 'Justification: Different work areas within zone, no direct interaction' },

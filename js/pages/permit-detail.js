@@ -188,8 +188,8 @@ function renderRamsTab(permit) {
         <p style="font-size:var(--font-size-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:var(--space-3)">HSE Comments</p>
         <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);margin-bottom:var(--space-3)">
           <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
-            <div class="avatar" style="width:24px;height:24px;font-size:9px">JD</div>
-            <p style="font-size:var(--font-size-xs);font-weight:600;color:var(--text-primary)">John Davies</p>
+            <div class="avatar" style="width:24px;height:24px;font-size:9px">PS</div>
+            <p style="font-size:var(--font-size-xs);font-weight:600;color:var(--text-primary)">Prakash Senghani</p>
             <p style="font-size:var(--font-size-xs);color:var(--text-muted);margin-left:auto">2h ago</p>
           </div>
           <p style="font-size:var(--font-size-sm);color:var(--text-secondary);line-height:1.5">RAMS reviewed and validated. All hazards adequately addressed. Method statement is clear and comprehensive.</p>
@@ -331,9 +331,9 @@ function approvePermit(id) {
   }
 
   permit.status = 'APPROVED';
-  permit.approvedBy = 'John Davies';
+  permit.approvedBy = 'Prakash Senghani';
   permit.approvedAt = new Date().toISOString();
-  permit.auditLog.unshift({ action: 'Permit Approved', user: 'John Davies', time: new Date().toISOString(), type: 'approve', detail: 'All conditions met. RAMS validated.' });
+  permit.auditLog.unshift({ action: 'Permit Approved', user: 'Prakash Senghani', time: new Date().toISOString(), type: 'approve', detail: 'All conditions met. RAMS validated.' });
 
   showToast('Permit approved successfully!', 'success');
   renderPage('permit-detail');
@@ -343,7 +343,7 @@ function rejectPermit(id) {
   const permit = findPermit(id);
   if (!permit) return;
   permit.status = 'REJECTED';
-  permit.auditLog.unshift({ action: 'Permit Rejected', user: 'John Davies', time: new Date().toISOString(), type: 'reject' });
+  permit.auditLog.unshift({ action: 'Permit Rejected', user: 'Prakash Senghani', time: new Date().toISOString(), type: 'reject' });
   showToast('Permit rejected', 'error');
   renderPage('permit-detail');
 }
@@ -353,7 +353,7 @@ function suspendPermit(id) {
   if (!permit) return;
   permit.status = 'SUSPENDED';
   permit.suspendedReason = 'Suspended by HSE Manager pending investigation.';
-  permit.auditLog.unshift({ action: 'Permit Suspended', user: 'John Davies', time: new Date().toISOString(), type: 'suspend', detail: 'Suspended by HSE Manager' });
+  permit.auditLog.unshift({ action: 'Permit Suspended', user: 'Prakash Senghani', time: new Date().toISOString(), type: 'suspend', detail: 'Suspended by HSE Manager' });
   showToast('Permit suspended', 'warning');
   renderPage('permit-detail');
 }
@@ -362,7 +362,7 @@ function reactivatePermit(id) {
   const permit = findPermit(id);
   if (!permit) return;
   permit.status = 'ACTIVE';
-  permit.auditLog.unshift({ action: 'Permit Reactivated', user: 'John Davies', time: new Date().toISOString(), type: 'activate' });
+  permit.auditLog.unshift({ action: 'Permit Reactivated', user: 'Prakash Senghani', time: new Date().toISOString(), type: 'activate' });
   showToast('Permit reactivated', 'success');
   renderPage('permit-detail');
 }
@@ -371,7 +371,7 @@ function closePermit(id) {
   const permit = findPermit(id);
   if (!permit) return;
   permit.status = 'CLOSED';
-  permit.auditLog.unshift({ action: 'Permit Closed', user: 'John Davies', time: new Date().toISOString(), type: 'close', detail: 'Work completed. Site cleared.' });
+  permit.auditLog.unshift({ action: 'Permit Closed', user: 'Prakash Senghani', time: new Date().toISOString(), type: 'close', detail: 'Work completed. Site cleared.' });
   showToast('Permit closed', 'success');
   renderPage('permit-detail');
 }
@@ -380,8 +380,8 @@ function validateRams(id) {
   const permit = findPermit(id);
   if (!permit) return;
   permit.rams.status = 'VALIDATED';
-  permit.rams.files.forEach(f => { f.validated = true; f.validatedBy = 'John Davies'; });
-  permit.auditLog.unshift({ action: 'RAMS Validated', user: 'John Davies', time: new Date().toISOString(), type: 'validate' });
+  permit.rams.files.forEach(f => { f.validated = true; f.validatedBy = 'Prakash Senghani'; });
+  permit.auditLog.unshift({ action: 'RAMS Validated', user: 'Prakash Senghani', time: new Date().toISOString(), type: 'validate' });
   showToast('RAMS document validated', 'success');
   switchDetailTab('rams');
 }
@@ -399,7 +399,7 @@ function simulateNewRamsVersion(id) {
     date: '2026-02-18',
     validated: false
   });
-  permit.auditLog.unshift({ action: `RAMS Updated (v${newVersion})`, user: 'John Davies', time: new Date().toISOString(), type: 'upload', detail: 'New version uploaded. Validation reset.' });
+  permit.auditLog.unshift({ action: `RAMS Updated (v${newVersion})`, user: 'Prakash Senghani', time: new Date().toISOString(), type: 'upload', detail: 'New version uploaded. Validation reset.' });
   showToast('New RAMS version uploaded. Validation required.', 'warning', 4000);
   switchDetailTab('rams');
 }

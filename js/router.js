@@ -113,7 +113,7 @@ function updateBackButton(page) {
 
 function updateNavTitle(page) {
     const titles = {
-        'dashboard': 'SafeWork PTW',
+        'dashboard': 'ePermits',
         'permit-list': 'All Permits',
         'create-permit': 'New Permit',
         'permit-detail': 'Permit Details',
