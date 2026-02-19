@@ -312,23 +312,203 @@ function runAIAnalysis() {
 }
 
 // ============================================
-// STEP 4: RAMS
+// STEP 4: RAMS & RISK CONTROL CHECKLIST
 // ============================================
 function renderStep4(data) {
-  // Reuse existing RAMS logic but simplified
+  // Get the permit type checklist from PTW_DATA
+  const detectedTypeKey = data.aiAnalysis.detectedType;
+  let checklistItems = [];
+  if (detectedTypeKey) {
+    // Map AI detected type name to PTW_DATA permitType ID
+    const typeNameMap = {
+      'Hot Work': 'HOT_WORK',
+      'Work at Height': 'WORKING_AT_HEIGHT',
+      'Confined Space': 'CONFINED_SPACE',
+      'Electrical Work': 'ELECTRICAL',
+      'Excavation': 'EXCAVATION',
+      'Chemical Handling': 'CHEMICAL',
+      'General Work': 'HOT_WORK' // fallback
+    };
+    const typeId = typeNameMap[detectedTypeKey] || 'HOT_WORK';
+    const permitType = PTW_DATA.permitTypes.find(t => t.id === typeId);
+    if (permitType) checklistItems = permitType.checklist;
+  }
+
+  // Initialise checklist state if not already done
+  if (!data.checklist || data.checklist.length !== checklistItems.length) {
+    APP_STATE.wizard.data.checklist = new Array(checklistItems.length).fill(false);
+  }
+  const checklist = data.checklist || [];
+
+  // Mock existing RAMS documents
+  const existingRams = [
+    { id: 'RAMS_001', name: 'RAMS_HotWork_General_v3.pdf', date: '2026-02-10' },
+    { id: 'RAMS_002', name: 'RAMS_ConfinedSpace_Standard.pdf', date: '2026-02-01' },
+    { id: 'RAMS_003', name: 'RAMS_WorkAtHeight_Scaffold.pdf', date: '2026-01-28' },
+    { id: 'RAMS_004', name: 'RAMS_Electrical_LV_v2.pdf', date: '2026-01-15' },
+  ];
+
+  const completedCount = checklist.filter(Boolean).length;
+  const totalCount = checklistItems.length;
+  const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
   return `
     <div style="display:flex;flex-direction:column;gap:var(--space-4)">
-       <div class="alert alert-info">
-          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <div class="alert-content">
-             <p class="alert-title">Documentation Link</p>
-             <p class="alert-body">Based on the <strong>${data.aiAnalysis.detectedType}</strong> classification, a specific RAMS is required.</p>
+
+      <!-- ── RAMS SECTION ─────────────────────────── -->
+      <div class="card" style="border:2px solid var(--brand-primary);background:linear-gradient(135deg,rgba(30,90,95,0.07) 0%,transparent 100%)">
+        <div class="card-body">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:var(--space-3)">
+            <div style="width:36px;height:36px;background:var(--brand-primary);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>
+              <p style="font-weight:700;font-size:var(--font-size-md)">RAMS Document</p>
+              <p style="font-size:var(--font-size-xs);color:var(--text-muted)">Risk Assessment & Method Statement required</p>
+            </div>
+            ${data.rams ? `<span class="badge badge-success" style="margin-left:auto">✓ Attached</span>` : `<span class="badge" style="margin-left:auto;background:var(--warning-bg);color:var(--warning)">Required</span>`}
           </div>
-       </div>
-       
-       ${renderStep5(data)} <!-- Reusing the previous RAMS component -->
+
+          <!-- Upload CTA -->
+          <label style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:var(--brand-primary);color:white;border-radius:10px;cursor:pointer;font-weight:600;font-size:var(--font-size-sm);margin-bottom:var(--space-3);box-shadow:0 4px 14px rgba(30,90,95,0.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+            Upload RAMS Document
+            <input type="file" accept=".pdf,.doc,.docx" onchange="handleRamsUpload(this)" style="display:none">
+          </label>
+
+          <!-- Divider -->
+          <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3)">
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+            <span style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">or select existing</span>
+            <div style="flex:1;height:1px;background:var(--border)"></div>
+          </div>
+
+          <!-- Existing RAMS Dropdown -->
+          <select class="form-select" onchange="selectExistingRams(this.value)" style="margin-bottom:0">
+            <option value="">— Choose from existing RAMS library —</option>
+            ${existingRams.map(r => `<option value="${r.id}" ${data.rams && data.rams.id === r.id ? 'selected' : ''}>${r.name} (${r.date})</option>`).join('')}
+          </select>
+
+          <!-- Attached file preview -->
+          ${data.rams ? `
+            <div style="display:flex;align-items:center;gap:10px;margin-top:var(--space-3);padding:10px 14px;background:var(--success-bg);border-radius:8px;border:1px solid var(--success)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" width="18" height="18"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span style="font-size:var(--font-size-sm);font-weight:600;color:var(--success);flex:1">${data.rams.name}</span>
+              <button onclick="clearRams()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);padding:2px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+
+      <!-- ── RISK CONTROL CHECKLIST ─────────────────── -->
+      ${checklistItems.length > 0 ? `
+      <div class="card">
+        <div class="card-header" style="padding-bottom:var(--space-2)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <h4 style="font-size:var(--font-size-md);margin-bottom:2px">Risk Control Checklist</h4>
+              <p style="font-size:var(--font-size-xs);color:var(--text-muted)">${completedCount} of ${totalCount} controls verified</p>
+            </div>
+            <div style="width:44px;height:44px;position:relative">
+              <svg viewBox="0 0 36 36" width="44" height="44">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="var(--border)" stroke-width="3"/>
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="${progress === 100 ? 'var(--success)' : 'var(--brand-primary)'}" stroke-width="3"
+                  stroke-dasharray="${progress} ${100 - progress}" stroke-dashoffset="25" stroke-linecap="round"/>
+              </svg>
+              <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:700;color:${progress === 100 ? 'var(--success)' : 'var(--brand-primary)'}">${progress}%</span>
+            </div>
+          </div>
+          <!-- Progress Bar -->
+          <div style="margin-top:var(--space-2);height:4px;background:var(--border);border-radius:4px;overflow:hidden">
+            <div style="width:${progress}%;height:100%;background:${progress === 100 ? 'var(--success)' : 'var(--brand-primary)'};border-radius:4px;transition:width 0.3s ease"></div>
+          </div>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:2px;padding-top:var(--space-2)">
+          ${checklistItems.map((item, idx) => `
+            <label style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;${idx === checklistItems.length - 1 ? 'border-bottom:none' : ''}">
+              <div style="position:relative;flex-shrink:0;margin-top:1px">
+                <input type="checkbox" ${checklist[idx] ? 'checked' : ''} onchange="toggleChecklistItem(${idx}, this.checked)"
+                  style="position:absolute;opacity:0;width:22px;height:22px;cursor:pointer;z-index:1">
+                <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${checklist[idx] ? 'var(--success)' : 'var(--border)'};background:${checklist[idx] ? 'var(--success)' : 'transparent'};display:flex;align-items:center;justify-content:center;transition:all 0.15s ease">
+                  ${checklist[idx] ? `<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+                </div>
+              </div>
+              <span style="font-size:var(--font-size-sm);color:${checklist[idx] ? 'var(--text-muted)' : 'var(--text-primary)'};line-height:1.4;${checklist[idx] ? 'text-decoration:line-through' : ''}">${item}</span>
+            </label>
+          `).join('')}
+        </div>
+        ${progress < 100 ? `
+        <div style="padding:var(--space-3);padding-top:0">
+          <button onclick="markAllChecklistItems()" style="width:100%;padding:8px;border:1px dashed var(--border);background:none;border-radius:8px;font-size:var(--font-size-xs);color:var(--text-muted);cursor:pointer;font-weight:600">
+            ✓ Mark All as Verified
+          </button>
+        </div>
+        ` : ''}
+      </div>
+      ` : `
+      <div class="alert alert-info">
+        <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div class="alert-content">
+          <p class="alert-title">Checklist Loading</p>
+          <p class="alert-body">Complete Step 3 AI Analysis to load the risk control checklist for this permit type.</p>
+        </div>
+      </div>
+      `}
+
     </div>
   `;
+}
+
+function handleRamsUpload(input) {
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    APP_STATE.wizard.data.rams = {
+      id: 'upload_' + Date.now(),
+      name: file.name,
+      size: (file.size / 1024).toFixed(0) + ' KB',
+      type: 'upload',
+      date: new Date().toISOString().split('T')[0],
+      validated: false
+    };
+    showToast('RAMS document attached', 'success');
+    renderPage('create-permit');
+  }
+}
+
+function selectExistingRams(id) {
+  if (!id) return;
+  const existingRams = [
+    { id: 'RAMS_001', name: 'RAMS_HotWork_General_v3.pdf', date: '2026-02-10', validated: true },
+    { id: 'RAMS_002', name: 'RAMS_ConfinedSpace_Standard.pdf', date: '2026-02-01', validated: true },
+    { id: 'RAMS_003', name: 'RAMS_WorkAtHeight_Scaffold.pdf', date: '2026-01-28', validated: true },
+    { id: 'RAMS_004', name: 'RAMS_Electrical_LV_v2.pdf', date: '2026-01-15', validated: true },
+  ];
+  const selected = existingRams.find(r => r.id === id);
+  if (selected) {
+    APP_STATE.wizard.data.rams = selected;
+    showToast('RAMS document selected', 'success');
+    renderPage('create-permit');
+  }
+}
+
+function clearRams() {
+  APP_STATE.wizard.data.rams = null;
+  renderPage('create-permit');
+}
+
+function toggleChecklistItem(index, checked) {
+  if (!APP_STATE.wizard.data.checklist) return;
+  APP_STATE.wizard.data.checklist[index] = checked;
+  // Re-render only the checklist section to avoid losing focus
+  renderPage('create-permit');
+}
+
+function markAllChecklistItems() {
+  if (!APP_STATE.wizard.data.checklist) return;
+  APP_STATE.wizard.data.checklist = APP_STATE.wizard.data.checklist.map(() => true);
+  renderPage('create-permit');
 }
 
 // ============================================
