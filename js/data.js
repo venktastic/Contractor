@@ -295,7 +295,7 @@ const DB = {
 
   escalationLog: [
     { id: 'esc-001', contractorId: 'c-008', contractor: 'Fortis Cranes & Rigging', date: '2026-01-05', trigger: 'Fatal incident + 14 overdue actions', status: 'Reviewed', reviewedBy: 'Prakash Senghani', reviewDate: '2026-01-06', notes: 'Suspended pending investigation. Legal team engaged. No works to proceed.' },
-    { id: 'esc-002', contractorId: 'c-006', contractor: 'Ironclad Demolition', date: '2026-02-10', trigger: '7 overdue actions, IFR 1.9, compliance < 60%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null },
+    { id: 'esc-002', contractorId: 'c-006', contractor: 'Ironclad Demolition', date: '2026-02-10', trigger: '7 overdue actions, LTIFR 1.9, compliance < 60%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null },
     { id: 'esc-003', contractorId: 'c-004', contractor: 'Pinnacle Scaffolding', date: '2026-02-12', trigger: '4 overdue actions, expired scaffolding licence, compliance 61%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null }
   ],
 

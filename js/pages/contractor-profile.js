@@ -58,7 +58,7 @@ window.renderContractorProfile = function (id) {
         <!-- KPI Snippets -->
         <div style="display:flex;gap:20px;flex-wrap:wrap">
           ${[
-      { label: 'IFR', val: c.ifr || '—', color: c.ifr > 1.5 ? 'var(--danger)' : c.ifr >= 1.0 ? 'var(--orange)' : c.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)' },
+      { label: 'LTIFR', val: c.ifr || '—', color: c.ifr > 1.5 ? 'var(--danger)' : c.ifr >= 1.0 ? 'var(--orange)' : c.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)' },
       { label: 'Compliance', val: c.compliancePercent + '%', color: c.compliancePercent >= 90 ? 'var(--success)' : c.compliancePercent >= 75 ? 'var(--warning)' : 'var(--danger)' },
       { label: 'Workers', val: c.activeWorkers + '/' + c.workerCount, color: 'var(--primary)' },
       { label: 'Open Actions', val: c.openActions, color: c.overdueActions > 0 ? 'var(--danger)' : 'var(--text-primary)' },
@@ -100,7 +100,7 @@ window.renderContractorProfile = function (id) {
           <span class="badge" style="background:rgba(124,58,237,0.1);color:var(--purple);border:1px solid rgba(124,58,237,0.2)">${c.predictiveRisk || 'N/A'}</span>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <div style="font-size:11px;color:var(--purple);font-weight:600">IFR Trend:</div>
+          <div style="font-size:11px;color:var(--purple);font-weight:600">LTIFR Trend:</div>
           <span class="badge" style="background:${c.ifrTrend === 'up' ? 'var(--danger-bg)' : c.ifrTrend === 'down' ? 'var(--success-bg)' : 'var(--bg-elevated)'};color:${c.ifrTrend === 'up' ? 'var(--danger)' : c.ifrTrend === 'down' ? 'var(--success)' : 'var(--text-muted)'};border:1px solid var(--border)">
             ${c.ifrTrend === 'up' ? '↑ Rising' : c.ifrTrend === 'down' ? '↓ Improving' : '→ Stable'}
           </span>
@@ -367,7 +367,7 @@ function raiseEscalation(contractorId) {
     contractorId,
     contractor: c.name,
     date: new Date().toISOString().split('T')[0],
-    trigger: `Risk Score: ${c.riskScore}, IFR: ${c.ifr}, Overdue Actions: ${c.overdueActions}`,
+    trigger: `Risk Score: ${c.riskScore}, LTIFR: ${c.ifr}, Overdue Actions: ${c.overdueActions}`,
     status: 'Open',
     reviewedBy: null, reviewDate: null, notes: null
   });

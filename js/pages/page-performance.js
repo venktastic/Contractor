@@ -27,7 +27,7 @@ window.renderPerformance = function () {
     <div class="grid grid-4" style="margin-bottom:20px">
       ${[
       { label: 'Total Incidents', val: kpi.totalIncidents, sub: 'across portfolio', color: '#DC2626', bg: 'var(--danger-bg)', trend: '↑ 8%' },
-      { label: 'Avg IFR', val: kpi.ifr, sub: 'vs 3.1 last period', color: '#EA580C', bg: 'var(--orange-bg)', trend: '↑ Rising' },
+      { label: 'Avg LTIFR', val: kpi.ifr, sub: 'vs 3.1 last period', color: '#EA580C', bg: 'var(--orange-bg)', trend: '↑ Rising' },
       { label: 'Open Actions', val: kpi.openActions, sub: `${kpi.overdueActions} overdue`, color: '#D97706', bg: 'var(--warning-bg)', trend: '⚠ Review' },
       { label: 'Avg Compliance', val: kpi.avgCompliancePct + '%', sub: `${kpi.compliantWorkers} workers`, color: '#059669', bg: 'var(--success-bg)', trend: '↑ Stable' }
     ].map(k => `
@@ -69,19 +69,19 @@ window.renderPerformance = function () {
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
         <div>
-          <div class="card-title">📊 Contractor IFR Benchmarking</div>
-          <div class="card-subtitle">All contractors benchmarked against portfolio average (IFR ${kpi.ifr})</div>
+          <div class="card-title">📊 Contractor LTIFR Benchmarking</div>
+          <div class="card-subtitle">All contractors benchmarked against portfolio average (LTIFR ${kpi.ifr})</div>
         </div>
       </div>
       <div class="table-container">
         <table class="data-table">
           <thead><tr>
             <th>Contractor</th>
-            <th>IFR</th>
+            <th>LTIFR</th>
             <th>vs Portfolio Avg</th>
             <th>Incidents (90d)</th>
             <th>Action Closure Speed</th>
-            <th>IFR Trend</th>
+            <th>LTIFR Trend</th>
             <th>Predictive State</th>
           </tr></thead>
           <tbody>
@@ -129,7 +129,7 @@ window.renderPerformance = function () {
       </div>
       <div class="table-container">
         <table class="data-table">
-          <thead><tr><th>Project</th><th>IFR</th><th>Compliance %</th><th>Contractors</th><th>Incidents</th><th>Performance</th></tr></thead>
+          <thead><tr><th>Project</th><th>LTIFR</th><th>Compliance %</th><th>Contractors</th><th>Incidents</th><th>Performance</th></tr></thead>
           <tbody>
             ${DB.projectBenchmarks.map(p => `
               <tr>

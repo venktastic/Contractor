@@ -76,7 +76,7 @@ window.renderDashboard = function () {
       <div class="kpi-card trend-up" onclick="navigateTo('performance')">
         <div class="kpi-top">
           <div>
-            <div class="kpi-label">Incident Freq. Rate</div>
+            <div class="kpi-label">LTIFR</div>
             <div class="kpi-value">${kpi.ifr}</div>
           </div>
           <div class="kpi-icon-wrap" style="background:var(--danger-bg)">
@@ -247,7 +247,7 @@ window.renderDashboard = function () {
           <table class="data-table">
             <thead><tr>
               <th>Contractor</th>
-              <th>IFR</th>
+              <th>LTIFR</th>
               <th>Overdue %</th>
               <th>Compliance</th>
               <th>Risk Score</th>
@@ -288,7 +288,7 @@ window.renderDashboard = function () {
         <div class="card-header">
           <div>
             <div class="card-title">⚡ Risk Quadrant Analysis</div>
-            <div class="card-subtitle">IFR vs Corrective Action Closure Speed</div>
+            <div class="card-subtitle">LTIFR vs Corrective Action Closure Speed</div>
           </div>
         </div>
         <div class="card-body" style="padding:16px">
@@ -296,7 +296,7 @@ window.renderDashboard = function () {
             <!-- Quadrant grid -->
             <div style="display:grid;grid-template-columns:1fr 1fr;height:280px">
               <div style="background:rgba(234,88,12,0.06);border-right:1px dashed var(--border);border-bottom:1px dashed var(--border);padding:8px;display:flex;align-items:flex-start;justify-content:flex-start">
-                <div style="font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px">⚠ High IFR / Slow Closure</div>
+                <div style="font-size:9px;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px">⚠ High LTIFR / Slow Closure</div>
               </div>
               <div style="background:rgba(220,38,38,0.06);border-bottom:1px dashed var(--border);padding:8px;display:flex;align-items:flex-start;justify-content:flex-end">
                 <div style="font-size:9px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px">🔴 Critical / Poor Control</div>
@@ -305,7 +305,7 @@ window.renderDashboard = function () {
                 <div style="font-size:9px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px">✅ High Performing</div>
               </div>
               <div style="background:rgba(16,185,129,0.04);padding:8px;display:flex;align-items:flex-end;justify-content:flex-end">
-                <div style="font-size:9px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.5px">📈 Low IFR / Fast Closure</div>
+                <div style="font-size:9px;font-weight:700;color:var(--success);text-transform:uppercase;letter-spacing:0.5px">📈 Low LTIFR / Fast Closure</div>
               </div>
             </div>
 
@@ -317,12 +317,12 @@ window.renderDashboard = function () {
     const y = Math.min((1 - c.closureSpeed / maxSpeed) * 100, 98);
     const color = c.riskLevel === 'Critical' ? '#DC2626' : c.riskLevel === 'High' ? '#EA580C' : c.riskLevel === 'Medium' ? '#D97706' : '#059669';
     const initials = c.name.split(' ').map(w => w[0]).join('').slice(0, 2);
-    return `<div style="position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:white;cursor:pointer;pointer-events:all;z-index:10" onclick="navigateTo('contractor-profile',{id:'${c.id}'})" title="${c.name} — IFR: ${c.ifr}, Closure: ${c.closureSpeed}d">${initials}</div>`;
+    return `<div style="position:absolute;left:${x}%;top:${y}%;transform:translate(-50%,-50%);width:28px;height:28px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:white;cursor:pointer;pointer-events:all;z-index:10" onclick="navigateTo('contractor-profile',{id:'${c.id}'})" title="${c.name} — LTIFR: ${c.ifr}, Closure: ${c.closureSpeed}d">${initials}</div>`;
   }).join('')}
             </div>
 
             <!-- Axis Labels -->
-            <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:10px;color:var(--text-muted);font-weight:600">IFR (Incident Frequency Rate) →</div>
+            <div style="position:absolute;bottom:6px;left:0;right:0;text-align:center;font-size:10px;color:var(--text-muted);font-weight:600">LTIFR (Lost Time Injury Frequency Rate) →</div>
             <div style="position:absolute;left:6px;top:50%;transform:translateY(-50%) rotate(-90deg);font-size:10px;color:var(--text-muted);font-weight:600;white-space:nowrap">Closure Speed →</div>
           </div>
 
@@ -390,7 +390,7 @@ window.renderDashboard = function () {
                 <div class="progress-bar-wrap"><div class="progress-bar-fill ${getProgressClass(bu.compliance)}" style="width:${bu.compliance}%"></div></div>
                 <div style="display:flex;justify-content:space-between;margin-top:4px">
                   <span style="font-size:11px;color:var(--text-muted)">${bu.contractors} contractors · ${bu.incidents} incidents</span>
-                  <span class="badge ${bu.compliance >= 80 ? 'badge-approved' : 'badge-warning'}" style="font-size:10px">IFR ${bu.ifr}</span>
+                  <span class="badge ${bu.compliance >= 80 ? 'badge-approved' : 'badge-warning'}" style="font-size:10px">LTIFR ${bu.ifr}</span>
                 </div>
               </div>`).join('')}
           </div>
@@ -457,7 +457,7 @@ function showHighRiskContractors() {
             <div class="notif-dot" style="background:${c.riskLevel === 'Critical' ? 'var(--danger)' : 'var(--orange)'}"></div>
             <div class="notif-content">
               <div class="notif-title">${c.name}</div>
-              <div class="notif-body">IFR: ${c.ifr} · Compliance: ${c.compliancePercent}% · ${c.overdueActions} overdue actions</div>
+              <div class="notif-body">LTIFR: ${c.ifr} · Compliance: ${c.compliancePercent}% · ${c.overdueActions} overdue actions</div>
             </div>
             <span class="risk-badge ${getRiskBadge(c.riskLevel)}">${c.riskLevel}</span>
           </div>`).join('')}

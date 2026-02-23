@@ -149,7 +149,7 @@ function buildContractorsTable() {
     { key: 'status', label: 'Status' },
     { key: 'riskLevel', label: 'Risk Level' },
     { key: 'compliancePercent', label: 'Compliance' },
-    { key: 'ifr', label: 'IFR' },
+    { key: 'ifr', label: 'LTIFR' },
     { key: 'overdueActions', label: 'Overdue' },
     { key: 'workerCount', label: 'Workers' },
     { key: 'reviewDue', label: 'Review Due' },

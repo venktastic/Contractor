@@ -47,7 +47,7 @@ window.renderReports = function () {
             ${[
       { id: 'contractor-risk', name: 'Contractor Risk Report', desc: 'Risk scores, trends, and recommendations', icon: '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>' },
       { id: 'compliance', name: 'Compliance Status Report', desc: 'Document and workforce compliance overview', icon: '<polyline points="20 6 9 17 4 12"/>' },
-      { id: 'performance', name: 'Performance Benchmarking', desc: 'IFR, incidents, and action closure rates', icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
+      { id: 'performance', name: 'Performance Benchmarking', desc: 'LTIFR, incidents, and action closure rates', icon: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
       { id: 'workforce', name: 'Workforce Competency', desc: 'Certification status and expiry tracking', icon: '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>' },
       { id: 'incident', name: 'Incident Analysis', desc: 'Incident trends, types, and root causes', icon: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>' },
       { id: 'audit', name: 'Audit Findings Report', desc: 'Audit results and corrective action status', icon: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>' }
@@ -238,5 +238,5 @@ function animateProgress(from, to, duration) {
 }
 
 function getReportData() {
-  return DB.contractors.map(c => ({ Contractor: c.name, Status: c.status, Risk: c.riskLevel, Score: c.riskScore, Compliance: c.compliancePercent + '%', IFR: c.ifr, Incidents: c.incidents, OpenActions: c.openActions, OverdueActions: c.overdueActions }));
+  return DB.contractors.map(c => ({ Contractor: c.name, Status: c.status, Risk: c.riskLevel, Score: c.riskScore, Compliance: c.compliancePercent + '%', LTIFR: c.ifr, Incidents: c.incidents, OpenActions: c.openActions, OverdueActions: c.overdueActions }));
 }

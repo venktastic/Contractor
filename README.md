@@ -7,7 +7,7 @@ It provides a unified platform for HSE (Health, Safety, and Environment) managem
 ## Key Features
 
 ### 🏢 Executive Dashboards & Analytics
-- **Enterprise Overview**: Real-time KPI tracking (IFR, LTIR, TRIR) and compliance metrics.
+- **Enterprise Overview**: Real-time KPI tracking (LTIFR, LTIR, TRIR) and compliance metrics.
 - **Project Drill-down**: Detailed views for Business Units and individual projects.
 - **Trend Analysis**: Visual indicators for safety performance trends (Improving/Deteriorating).
 
