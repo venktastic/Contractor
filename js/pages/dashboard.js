@@ -124,18 +124,18 @@ window.renderDashboard = function () {
         </div>
       </div>
 
-      <div class="kpi-card trend-up">
+      <div class="kpi-card trend-down">
         <div class="kpi-top">
           <div>
             <div class="kpi-label">Workforce Compliance</div>
             <div class="kpi-value">${kpi.workforceCompliance}%</div>
           </div>
-          <div class="kpi-icon-wrap" style="background:var(--warning-bg)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <div class="kpi-icon-wrap" style="background:var(--success-bg)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           </div>
         </div>
-        <div class="kpi-trend up">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+        <div class="kpi-trend down">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg>
           <span>${kpi.workforceCompliancePct}%</span>
           <span class="kpi-change">${kpi.compliantWorkers}/${kpi.totalWorkers} workers</span>
         </div>
@@ -263,7 +263,7 @@ window.renderDashboard = function () {
                     <div class="text-xs text-muted">${c.projects.length} project(s)</div>
                   </td>
                   <td>
-                    <div style="font-weight:700;color:${c.ifr >= 5 ? 'var(--danger)' : c.ifr >= 2 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</div>
+                    <div style="font-weight:700;color:${c.ifr > 1.5 ? 'var(--danger)' : c.ifr >= 1.0 ? 'var(--orange)' : c.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</div>
                   </td>
                   <td>
                     <div style="font-weight:700;color:${overduePct >= 30 ? 'var(--danger)' : overduePct >= 15 ? 'var(--warning)' : 'var(--success)'}">${overduePct}%</div>
@@ -312,7 +312,7 @@ window.renderDashboard = function () {
             <!-- Dots -->
             <div style="position:absolute;inset:0;pointer-events:none">
               ${DB.contractors.filter(c => c.ifr !== undefined && c.closureSpeed !== undefined).map(c => {
-    const maxIfr = 15, maxSpeed = 50;
+    const maxIfr = 3, maxSpeed = 50;
     const x = Math.min((c.ifr / maxIfr) * 100, 98);
     const y = Math.min((1 - c.closureSpeed / maxSpeed) * 100, 98);
     const color = c.riskLevel === 'Critical' ? '#DC2626' : c.riskLevel === 'High' ? '#EA580C' : c.riskLevel === 'Medium' ? '#D97706' : '#059669';
@@ -360,7 +360,7 @@ window.renderDashboard = function () {
                 <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="navigateTo('contractors')">
                   <div style="width:80px;font-size:11px;font-weight:600;color:var(--text-muted);text-align:right;flex-shrink:0">${p.name}</div>
                   <div style="flex:1;background:var(--bg-elevated);border-radius:4px;height:20px;overflow:hidden">
-                    <div style="height:100%;width:${(p.ifr / maxIfr * 100)}%;background:${p.ifr >= 5 ? 'var(--danger)' : p.ifr >= 2 ? 'var(--warning)' : 'var(--success)'};border-radius:4px;display:flex;align-items:center;padding:0 6px;transition:width 0.8s ease">
+                    <div style="height:100%;width:${(p.ifr / maxIfr * 100)}%;background:${p.ifr > 1.5 ? 'var(--danger)' : p.ifr >= 1.0 ? 'var(--orange)' : p.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)'};border-radius:4px;display:flex;align-items:center;padding:0 6px;transition:width 0.8s ease">
                       <span style="font-size:10px;font-weight:700;color:white">${p.ifr}</span>
                     </div>
                   </div>

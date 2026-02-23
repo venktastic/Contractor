@@ -41,7 +41,7 @@ const DB = {
       compliancePercent: 88, workerCount: 47, activeWorkers: 42,
       incidents: 3, openActions: 2, overdueActions: 0,
       incidents90d: 1, closureSpeed: 8, ifrTrend: 'down',
-      ifr: 2.1, auditFindings: 4, predictiveRisk: 'Stable',
+      ifr: 0.8, auditFindings: 4, predictiveRisk: 'Stable',
       aiSummary: 'Minor upward trend in near-miss events. Compliance improving over last 60 days. No escalation trigger.',
       trendData: { incidents: [3, 2, 4, 3, 2, 3, 1], compliance: [82, 84, 85, 87, 86, 88, 88], actions: [5, 4, 4, 3, 3, 2, 2] },
       approvedDate: '2025-08-15', reviewDue: '2026-08-15',
@@ -67,7 +67,7 @@ const DB = {
       compliancePercent: 72, workerCount: 23, activeWorkers: 20,
       incidents: 6, openActions: 5, overdueActions: 2,
       incidents90d: 3, closureSpeed: 18, ifrTrend: 'up',
-      ifr: 5.8, auditFindings: 8, predictiveRisk: 'Deteriorating',
+      ifr: 1.4, auditFindings: 8, predictiveRisk: 'Deteriorating',
       aiSummary: 'Contractor showing 32% increase in minor incidents vs last quarter. Corrective action closure rate is below benchmark. Escalation monitoring recommended.',
       trendData: { incidents: [4, 5, 4, 6, 7, 6, 6], compliance: [80, 78, 75, 74, 72, 71, 72], actions: [3, 4, 5, 5, 6, 5, 5] },
       approvedDate: '2025-07-01', reviewDue: '2026-01-01',
@@ -115,7 +115,7 @@ const DB = {
       compliancePercent: 61, workerCount: 89, activeWorkers: 75,
       incidents: 8, openActions: 11, overdueActions: 4,
       incidents90d: 4, closureSpeed: 22, ifrTrend: 'up',
-      ifr: 4.2, auditFindings: 12, predictiveRisk: 'Deteriorating',
+      ifr: 1.3, auditFindings: 12, predictiveRisk: 'Deteriorating',
       aiSummary: '4 overdue corrective actions and expired scaffolding licence detected. Workforce compliance dropped 8% in 60 days. Enterprise review recommended.',
       trendData: { incidents: [5, 6, 7, 8, 8, 8, 8], compliance: [70, 68, 65, 63, 62, 61, 61], actions: [7, 8, 9, 10, 11, 11, 11] },
       approvedDate: null, reviewDue: null,
@@ -152,7 +152,7 @@ const DB = {
       compliancePercent: 55, workerCount: 34, activeWorkers: 28,
       incidents: 12, openActions: 18, overdueActions: 7,
       incidents90d: 5, closureSpeed: 31, ifrTrend: 'up',
-      ifr: 9.4, auditFindings: 22, predictiveRisk: 'High Risk / Poor Control',
+      ifr: 1.9, auditFindings: 22, predictiveRisk: 'High Risk / Poor Control',
       aiSummary: 'Critical risk profile. 38% of corrective actions overdue. Asbestos management plan expiring in 20 days. Immediate enterprise intervention required.',
       trendData: { incidents: [8, 9, 10, 11, 12, 12, 12], compliance: [62, 60, 58, 56, 55, 55, 55], actions: [12, 14, 15, 17, 18, 18, 18] },
       approvedDate: '2025-05-01', reviewDue: '2025-11-01',
@@ -177,7 +177,7 @@ const DB = {
       compliancePercent: 94, workerCount: 28, activeWorkers: 28,
       incidents: 1, openActions: 1, overdueActions: 0,
       incidents90d: 0, closureSpeed: 4, ifrTrend: 'stable',
-      ifr: 0.8, auditFindings: 2, predictiveRisk: 'Improving',
+      ifr: 0.2, auditFindings: 2, predictiveRisk: 'Improving',
       aiSummary: 'Strong compliance trajectory. Closure speed well above benchmark. Incident rate trending toward zero. Recommended for preferred supplier list.',
       trendData: { incidents: [2, 1, 1, 1, 1, 1, 1], compliance: [90, 91, 92, 93, 94, 94, 94], actions: [2, 2, 1, 1, 1, 1, 1] },
       approvedDate: '2025-10-01', reviewDue: '2026-10-01',
@@ -200,7 +200,7 @@ const DB = {
       compliancePercent: 30, workerCount: 15, activeWorkers: 0,
       incidents: 15, openActions: 23, overdueActions: 14,
       incidents90d: 7, closureSpeed: 45, ifrTrend: 'up',
-      ifr: 12.6, auditFindings: 31, predictiveRisk: 'High Risk / Poor Control',
+      ifr: 2.4, auditFindings: 31, predictiveRisk: 'High Risk / Poor Control',
       aiSummary: 'Suspended following fatal incident. 61% corrective actions overdue. All licences non-compliant. Enterprise intervention logged. No reinstatement pathway until investigation closes.',
       trendData: { incidents: [9, 11, 12, 14, 15, 15, 15], compliance: [55, 48, 42, 38, 32, 30, 30], actions: [15, 18, 20, 22, 23, 23, 23] },
       approvedDate: null, reviewDue: null,
@@ -264,10 +264,10 @@ const DB = {
   enterpriseKPIs: {
     totalContractors: 24, totalContractorsTrend: +3, totalContractorsPct: +14,
     activeContractors: 19, activeContractorsTrend: +2, activeContractorsPct: +12,
-    ifr: 4.2, ifrTrend: 'up', ifrPct: +8,
+    ifr: 1.8, ifrTrend: 'up', ifrPct: +8,
     highRisk: 6, highRiskTrend: +2, highRiskPct: +50,
     overdueActionsPct: 34, overdueActionsTrend: 'up', overdueActionsPctChange: +11,
-    workforceCompliance: 77, workforceComplianceTrend: 'down', workforceCompliancePct: -3,
+    workforceCompliance: 92, workforceComplianceTrend: 'up', workforceCompliancePct: '+3',
     openAudits: 14, openAuditsTrend: +3, openAuditsPct: +27,
     riskExposureScore: 68, riskExposureTrend: 'up', riskExposurePct: +9,
     fullyCompliant: 14, criticalRisk: 2,
@@ -277,25 +277,25 @@ const DB = {
   },
 
   projectBenchmarks: [
-    { id: 'proj-1', name: 'M7 Motorway', ifr: 3.8, compliance: 74, contractors: 5, incidents: 9 },
-    { id: 'proj-2', name: 'Harbour Bridge', ifr: 5.1, compliance: 69, contractors: 3, incidents: 7 },
-    { id: 'proj-3', name: 'Western Rail', ifr: 2.4, compliance: 82, contractors: 4, incidents: 4 },
-    { id: 'proj-4', name: 'Offshore Alpha', ifr: 9.4, compliance: 55, contractors: 2, incidents: 14 },
-    { id: 'proj-5', name: 'Solar Narrabri', ifr: 0.8, compliance: 94, contractors: 2, incidents: 1 },
-    { id: 'proj-6', name: 'CBD Tower', ifr: 1.2, compliance: 91, contractors: 4, incidents: 2 },
-    { id: 'proj-7', name: 'Westfield', ifr: 0.6, compliance: 95, contractors: 3, incidents: 1 },
-    { id: 'proj-8', name: 'Airport T3', ifr: 2.9, compliance: 80, contractors: 3, incidents: 5 }
+    { id: 'proj-1', name: 'M7 Motorway', ifr: 1.3, compliance: 74, contractors: 5, incidents: 9 },
+    { id: 'proj-2', name: 'Harbour Bridge', ifr: 1.4, compliance: 69, contractors: 3, incidents: 7 },
+    { id: 'proj-3', name: 'Western Rail', ifr: 0.6, compliance: 82, contractors: 4, incidents: 4 },
+    { id: 'proj-4', name: 'Offshore Alpha', ifr: 1.9, compliance: 55, contractors: 2, incidents: 14 },
+    { id: 'proj-5', name: 'Solar Narrabri', ifr: 0.2, compliance: 94, contractors: 2, incidents: 1 },
+    { id: 'proj-6', name: 'CBD Tower', ifr: 0.7, compliance: 91, contractors: 4, incidents: 2 },
+    { id: 'proj-7', name: 'Westfield', ifr: 0.3, compliance: 95, contractors: 3, incidents: 1 },
+    { id: 'proj-8', name: 'Airport T3', ifr: 0.9, compliance: 80, contractors: 3, incidents: 5 }
   ],
 
   buBenchmarks: [
-    { id: 'bu-1', name: 'Infrastructure', ifr: 4.1, compliance: 72, contractors: 8, incidents: 20 },
-    { id: 'bu-2', name: 'Energy & Resources', ifr: 5.8, compliance: 66, contractors: 7, incidents: 16 },
-    { id: 'bu-3', name: 'Civil Construction', ifr: 0.9, compliance: 92, contractors: 9, incidents: 4 }
+    { id: 'bu-1', name: 'Infrastructure', ifr: 1.2, compliance: 72, contractors: 8, incidents: 20 },
+    { id: 'bu-2', name: 'Energy & Resources', ifr: 1.5, compliance: 66, contractors: 7, incidents: 16 },
+    { id: 'bu-3', name: 'Civil Construction', ifr: 0.4, compliance: 92, contractors: 9, incidents: 4 }
   ],
 
   escalationLog: [
     { id: 'esc-001', contractorId: 'c-008', contractor: 'Fortis Cranes & Rigging', date: '2026-01-05', trigger: 'Fatal incident + 14 overdue actions', status: 'Reviewed', reviewedBy: 'Prakash Senghani', reviewDate: '2026-01-06', notes: 'Suspended pending investigation. Legal team engaged. No works to proceed.' },
-    { id: 'esc-002', contractorId: 'c-006', contractor: 'Ironclad Demolition', date: '2026-02-10', trigger: '7 overdue actions, IFR 9.4, compliance < 60%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null },
+    { id: 'esc-002', contractorId: 'c-006', contractor: 'Ironclad Demolition', date: '2026-02-10', trigger: '7 overdue actions, IFR 1.9, compliance < 60%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null },
     { id: 'esc-003', contractorId: 'c-004', contractor: 'Pinnacle Scaffolding', date: '2026-02-12', trigger: '4 overdue actions, expired scaffolding licence, compliance 61%', status: 'Open', reviewedBy: null, reviewDate: null, notes: null }
   ],
 

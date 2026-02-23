@@ -4,12 +4,12 @@
    ============================================================ */
 
 window.renderPerformance = function () {
-    const kpi = DB.enterpriseKPIs;
-    const tf = APP_TIME_FILTER;
-    const trend = DB.performanceTrend[tf];
-    const container = document.getElementById('page-container');
+  const kpi = DB.enterpriseKPIs;
+  const tf = APP_TIME_FILTER;
+  const trend = DB.performanceTrend[tf];
+  const container = document.getElementById('page-container');
 
-    container.innerHTML = `
+  container.innerHTML = `
   <div class="page">
     <div class="page-header">
       <div>
@@ -26,11 +26,11 @@ window.renderPerformance = function () {
     <!-- KPI Cards -->
     <div class="grid grid-4" style="margin-bottom:20px">
       ${[
-            { label: 'Total Incidents', val: kpi.totalIncidents, sub: 'across portfolio', color: '#DC2626', bg: 'var(--danger-bg)', trend: '↑ 8%' },
-            { label: 'Avg IFR', val: kpi.ifr, sub: 'vs 3.1 last period', color: '#EA580C', bg: 'var(--orange-bg)', trend: '↑ Rising' },
-            { label: 'Open Actions', val: kpi.openActions, sub: `${kpi.overdueActions} overdue`, color: '#D97706', bg: 'var(--warning-bg)', trend: '⚠ Review' },
-            { label: 'Avg Compliance', val: kpi.avgCompliancePct + '%', sub: `${kpi.compliantWorkers} workers`, color: '#059669', bg: 'var(--success-bg)', trend: '↑ Stable' }
-        ].map(k => `
+      { label: 'Total Incidents', val: kpi.totalIncidents, sub: 'across portfolio', color: '#DC2626', bg: 'var(--danger-bg)', trend: '↑ 8%' },
+      { label: 'Avg IFR', val: kpi.ifr, sub: 'vs 3.1 last period', color: '#EA580C', bg: 'var(--orange-bg)', trend: '↑ Rising' },
+      { label: 'Open Actions', val: kpi.openActions, sub: `${kpi.overdueActions} overdue`, color: '#D97706', bg: 'var(--warning-bg)', trend: '⚠ Review' },
+      { label: 'Avg Compliance', val: kpi.avgCompliancePct + '%', sub: `${kpi.compliantWorkers} workers`, color: '#059669', bg: 'var(--success-bg)', trend: '↑ Stable' }
+    ].map(k => `
         <div class="kpi-card trend-neutral">
           <div class="kpi-top">
             <div>
@@ -86,14 +86,14 @@ window.renderPerformance = function () {
           </tr></thead>
           <tbody>
             ${DB.contractors.filter(c => c.ifr !== undefined).sort((a, b) => (b.ifr || 0) - (a.ifr || 0)).map(c => {
-            const diff = ((c.ifr || 0) - kpi.ifr).toFixed(1);
-            const diffColor = parseFloat(diff) > 0 ? 'var(--danger)' : 'var(--success)';
-            return `<tr onclick="navigateTo('contractor-profile',{id:'${c.id}'})" style="cursor:pointer">
+      const diff = ((c.ifr || 0) - kpi.ifr).toFixed(1);
+      const diffColor = parseFloat(diff) > 0 ? 'var(--danger)' : 'var(--success)';
+      return `<tr onclick="navigateTo('contractor-profile',{id:'${c.id}'})" style="cursor:pointer">
                 <td>
                   <div style="font-weight:600">${c.name}</div>
                   <div class="text-xs text-muted">${c.riskLevel} Risk</div>
                 </td>
-                <td><div style="font-size:16px;font-weight:900;color:${(c.ifr || 0) >= 5 ? 'var(--danger)' : (c.ifr || 0) >= 2 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</div></td>
+                <td><div style="font-size:16px;font-weight:900;color:${(c.ifr || 0) > 1.5 ? 'var(--danger)' : (c.ifr || 0) >= 1.0 ? 'var(--orange)' : (c.ifr || 0) >= 0.5 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</div></td>
                 <td>
                   <div style="font-weight:700;color:${diffColor}">${parseFloat(diff) > 0 ? '+' : ''}${diff}</div>
                   <div style="font-size:11px;color:${parseFloat(diff) > 0 ? 'var(--danger)' : 'var(--success)'}"> ${parseFloat(diff) > 0 ? '▲ Above avg' : '▼ Below avg'}</div>
@@ -115,7 +115,7 @@ window.renderPerformance = function () {
                   <span class="badge ${c.predictiveRisk === 'High Performing' || c.predictiveRisk === 'Improving' ? 'badge-approved' : c.predictiveRisk === 'Stable' ? 'badge-draft' : 'badge-critic…al'}" style="white-space:nowrap">${c.predictiveRisk || 'N/A'}</span>
                 </td>
               </tr>`;
-        }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </div>
@@ -134,7 +134,7 @@ window.renderPerformance = function () {
             ${DB.projectBenchmarks.map(p => `
               <tr>
                 <td style="font-weight:600">${p.name}</td>
-                <td style="font-weight:700;color:${p.ifr >= 5 ? 'var(--danger)' : p.ifr >= 2 ? 'var(--warning)' : 'var(--success)'}">${p.ifr}</td>
+                <td style="font-weight:700;color:${p.ifr > 1.5 ? 'var(--danger)' : p.ifr >= 1.0 ? 'var(--orange)' : p.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)'}">${p.ifr}</td>
                 <td>
                   <div style="display:flex;align-items:center;gap:6px">
                     <div class="progress-bar-wrap" style="width:64px"><div class="progress-bar-fill ${getProgressClass(p.compliance)}" style="width:${p.compliance}%"></div></div>
@@ -143,7 +143,7 @@ window.renderPerformance = function () {
                 </td>
                 <td>${p.contractors}</td>
                 <td>${p.incidents}</td>
-                <td><span class="badge ${p.compliance >= 85 && p.ifr < 3 ? 'badge-approved' : p.compliance >= 70 ? 'badge-warning' : 'badge-danger'}">${p.compliance >= 85 && p.ifr < 3 ? '✓ On Track' : p.compliance >= 70 ? '⚠ Monitor' : '⛔ Review'}</span></td>
+                <td><span class="badge ${p.compliance >= 85 && p.ifr <= 1.0 ? 'badge-approved' : p.compliance >= 70 ? 'badge-warning' : 'badge-danger'}">${p.compliance >= 85 && p.ifr <= 1.0 ? '✓ On Track' : p.compliance >= 70 ? '⚠ Monitor' : '⛔ Review'}</span></td>
               </tr>`).join('')}
           </tbody>
         </table>

@@ -58,7 +58,7 @@ window.renderContractorProfile = function (id) {
         <!-- KPI Snippets -->
         <div style="display:flex;gap:20px;flex-wrap:wrap">
           ${[
-      { label: 'IFR', val: c.ifr || '—', color: c.ifr >= 5 ? 'var(--danger)' : c.ifr >= 2 ? 'var(--warning)' : 'var(--success)' },
+      { label: 'IFR', val: c.ifr || '—', color: c.ifr > 1.5 ? 'var(--danger)' : c.ifr >= 1.0 ? 'var(--orange)' : c.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)' },
       { label: 'Compliance', val: c.compliancePercent + '%', color: c.compliancePercent >= 90 ? 'var(--success)' : c.compliancePercent >= 75 ? 'var(--warning)' : 'var(--danger)' },
       { label: 'Workers', val: c.activeWorkers + '/' + c.workerCount, color: 'var(--primary)' },
       { label: 'Open Actions', val: c.openActions, color: c.overdueActions > 0 ? 'var(--danger)' : 'var(--text-primary)' },

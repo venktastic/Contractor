@@ -8,10 +8,10 @@
 /* ── Design Tokens ─────────────────────────────────────────── */
 :root {
   /* Brand */
-  --primary: #2563EB;
-  --primary-dark: #1D4ED8;
-  --primary-light: #EFF6FF;
-  --primary-subtle: #DBEAFE;
+  --primary: #456DB3;
+  --primary-dark: #375994;
+  --primary-light: #E8EEF8;
+  --primary-subtle: #C3D3EE;
 
   /* Semantic Colors */
   --success: #059669;
@@ -116,6 +116,16 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+::selection {
+  background: #456DB3;
+  color: white;
+}
+
+::-moz-selection {
+  background: #456DB3;
+  color: white;
 }
 
 html {
@@ -266,8 +276,8 @@ svg {
 }
 
 .nav-item.active {
-  background: var(--sidebar-active-bg);
-  color: var(--sidebar-active-text);
+  background: var(--primary);
+  color: white;
   font-weight: 600;
 }
 
@@ -636,7 +646,6 @@ svg {
   gap: 12px;
 }
 
-.page-title-area {}
 
 .page-title {
   font-size: 22px;

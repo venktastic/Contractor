@@ -81,7 +81,7 @@ window.renderSettings = function () {
         <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
           ${[
       { label: 'Auto-Escalation — Overdue Actions %', val: '30', unit: '%' },
-      { label: 'Auto-Escalation — IFR Threshold', val: '5.0', unit: 'IFR' },
+      { label: 'Auto-Escalation — IFR Threshold', val: '1.5', unit: 'IFR' },
       { label: 'Auto-Escalation — Compliance Below', val: '70', unit: '%' },
       { label: 'Document Expiry Warning (days)', val: '30', unit: 'days' },
       { label: 'Critical Risk Review Interval (months)', val: '3', unit: 'mths' }

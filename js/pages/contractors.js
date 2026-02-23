@@ -191,7 +191,7 @@ function buildContractorsTable() {
               <span style="font-size:12px;font-weight:700;color:${getComplianceClass(c.compliancePercent) === 'good' ? 'var(--success)' : getComplianceClass(c.compliancePercent) === 'ok' ? 'var(--warning)' : 'var(--danger)'}">${c.compliancePercent}%</span>
             </div>
           </td>
-          <td><span style="font-weight:700;color:${c.ifr >= 5 ? 'var(--danger)' : c.ifr >= 2 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</span></td>
+          <td><span style="font-weight:700;color:${c.ifr > 1.5 ? 'var(--danger)' : c.ifr >= 1.0 ? 'var(--orange)' : c.ifr >= 0.5 ? 'var(--warning)' : 'var(--success)'}">${c.ifr || '—'}</span></td>
           <td>
             ${c.overdueActions > 0
         ? `<span class="badge badge-critical">${c.overdueActions} overdue</span>`
